@@ -9,7 +9,7 @@ from fuel.streams import DataStream
 from lib.config import data_dir
 
 def faces(ntrain=None, nval=None, ntest=None, batch_size=128):
-    path = os.path.join(data_dir, 'faces_364293_128px.hdf5')
+    path = os.path.join(data_dir, 'faces.hdf5')
     tr_data = H5PYDataset(path, which_sets=('train',))
     te_data = H5PYDataset(path, which_sets=('test',))
 
