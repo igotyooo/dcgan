@@ -26,8 +26,10 @@ from lib.data_utils import OneHot, shuffle, iter_data, center_crop, patch
 from load import faces
 
 def transform(X):
-    X = [center_crop(x, npx) for x in X]
-    return floatX(X).transpose(0, 3, 1, 2)/127.5 - 1.
+    assert X[0].shape == (npx, npx, 3) or X[0].shape == (3, npx, npx)
+    if X[0].shape == (npx, npx, 3):
+        X = X.transpose(0, 3, 1, 2)
+    return floatX(X / 127.5 - 1.)
 
 def inverse_transform(X):
     X = (X.reshape(-1, nc, npx, npx).transpose(0, 2, 3, 1)+1.)/2.
