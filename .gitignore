@@ -1,3 +1,6 @@
 # Data directories.
 db/
 data/
+faces/samples
+faces/models
+faces/logs
