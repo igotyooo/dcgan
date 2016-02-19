@@ -1,6 +1,9 @@
-# Data directories.
+# Output data directories.
 db/
 data/
 faces/samples
 faces/models
 faces/logs
+
+# Compile outputs.
+*.pyc
