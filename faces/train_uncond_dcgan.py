@@ -49,7 +49,7 @@ nx = npx*npx*nc   # # of dimensions in X
 niter = 25        # # of iter at starting learning rate
 niter_decay = 0   # # of iter to linearly decay learning rate to zero
 lr = 0.0002       # initial learning rate for adam
-ntrain = 350000   # # of examples to train on
+ntrain = 182236   # # of examples to train on
 
 tr_data, te_data, tr_stream, val_stream, te_stream = faces(ntrain=ntrain)
 
