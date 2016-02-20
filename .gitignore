@@ -5,5 +5,8 @@ faces/samples
 faces/models
 faces/logs
 
+# Backup files.
+*.swp
+
 # Compile outputs.
 *.pyc
