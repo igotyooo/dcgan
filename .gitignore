@@ -1,9 +1,10 @@
-# Output data directories.
+# Output data.
 db/
 data/
 faces/samples
 faces/models
 faces/logs
+*.out
 
 # Backup files.
 *.swp
