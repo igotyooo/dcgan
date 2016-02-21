@@ -53,9 +53,9 @@ vaX, = tr_data.get_data(tr_handle, slice(0, 10000))
 vaX = transform(vaX)
 vis_idxs = py_rng.sample(np.arange(len(vaX)), nvis)
 vaX_vis = inverse_transform(vaX[vis_idxs])
+desc = 'uncond_dcgan'
 color_grid_vis(vaX_vis, (14, 14), 'samples/%s_etl_test.png'%desc)
 sample_zmb = floatX(np_rng.uniform(-1., 1., size=(nvis, nz)))
-desc = 'uncond_dcgan'
 model_dir = 'models/%s'%desc
 samples_dir = 'samples/%s'%desc
 if not os.path.exists('logs/'):
