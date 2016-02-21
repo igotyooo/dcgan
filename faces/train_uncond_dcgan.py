@@ -47,7 +47,7 @@ lr = 0.0002       # initial learning rate for adam
 ntrain = 182236   # # of examples to train on
 
 # FILE I/O.
-tr_data, te_data, tr_stream, val_stream, te_stream = faces(ntrain=ntrain)
+tr_data, te_data, tr_stream, val_stream, te_stream = faces(ntrain=ntrain) # Only tr_data/tr_stream are used.
 tr_handle = tr_data.open()
 vaX, = tr_data.get_data(tr_handle, slice(0, 10000))
 vaX = transform(vaX)
@@ -143,16 +143,20 @@ g_cost_d = bce(p_gen, T.ones(p_gen.shape)).mean() # One to minimize fake.
 d_cost = d_cost_real + d_cost_gen
 g_cost = g_cost_d
 cost = [g_cost, d_cost, g_cost_d, d_cost_real, d_cost_gen] # Final cost function for training.
+							   # A signle 'cost' computation includes
+							   # 1) z -> gen -> x_gen -> disc -> p_gen,
+							   # 2)             image -> disc -> p_real.
 lrt = sharedX(lr)
 d_updater = updates.Adam(lr=lrt, b1=b1, regularizer=updates.Regularizer(l2=l2)) # Load a solver.
 g_updater = updates.Adam(lr=lrt, b1=b1, regularizer=updates.Regularizer(l2=l2)) # Load a solver.
-d_updates = d_updater(discrim_params, d_cost) # Define params and cost for the solver.
-g_updates = g_updater(gen_params, g_cost) # Define params and cost for the solver.
+d_updates = d_updater(discrim_params, d_cost) # Define params and cost for the solver. This solver "ONLY" update the discriminator.
+g_updates = g_updater(gen_params, g_cost) # Define params and cost for the solver. This solver "ONLY" updates the generator.
 updates = d_updates + g_updates
 
 # COMPILING TRAIN/TEST FUNCTIONS.
 print 'COMPILING'
 t = time()
+# Feed-forward paths (i.e. cost) are the same for both of g and d, but backward paths (updates) are different.
 _train_g = theano.function([X, Z], cost, updates=g_updates) # Define/compile a training function given a batch of X and Z for the generator.
 _train_d = theano.function([X, Z], cost, updates=d_updates) # Define/compile a training function given a batch of X and Z for the discriminator.
 _gen = theano.function([Z], gX) # Define/compile a test function given a Z for the generator.
@@ -181,12 +185,13 @@ n_examples = 0
 t = time()
 for epoch in range(niter):
     for imb, in tqdm(tr_stream.get_epoch_iterator(), total=ntrain/nbatch):
-        imb = transform(imb)
-        zmb = floatX(np_rng.uniform(-1., 1., size=(len(imb), nz)))
+        imb = transform(imb) # Shared image batch used to update both of g and d.
+        zmb = floatX(np_rng.uniform(-1., 1., size=(len(imb), nz))) # Shared z batch used to update both of g and d.
+								   # Randomly initialized regardless of image batch.
         if n_updates % (k+1) == 0:
-            cost = _train_g(imb, zmb)
+            cost = _train_g(imb, zmb) # Updates g one time.
         else:
-            cost = _train_d(imb, zmb)
+            cost = _train_d(imb, zmb) # Updates d two times from both of real/fake inputs.
         n_updates += 1
         n_examples += len(imb)
     g_cost = float(cost[0])
