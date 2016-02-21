@@ -47,15 +47,7 @@ lr = 0.0002       # initial learning rate for adam
 ntrain = 182236   # # of examples to train on
 
 # FILE I/O.
-tr_data, te_data, tr_stream, val_stream, te_stream = faces(ntrain=ntrain) # Only tr_data/tr_stream are used.
-tr_handle = tr_data.open()
-vaX, = tr_data.get_data(tr_handle, slice(0, 10000))
-vaX = transform(vaX)
-vis_idxs = py_rng.sample(np.arange(len(vaX)), nvis)
-vaX_vis = inverse_transform(vaX[vis_idxs])
 desc = 'uncond_dcgan'
-color_grid_vis(vaX_vis, (14, 14), 'samples/%s_etl_test.png'%desc)
-sample_zmb = floatX(np_rng.uniform(-1., 1., size=(nvis, nz)))
 model_dir = 'models/%s'%desc
 samples_dir = 'samples/%s'%desc
 if not os.path.exists('logs/'):
@@ -76,6 +68,14 @@ log_fields = [
     'g_cost',
     'd_cost',
 ]
+tr_data, te_data, tr_stream, val_stream, te_stream = faces(ntrain=ntrain) # Only tr_data/tr_stream are used.
+tr_handle = tr_data.open()
+vaX, = tr_data.get_data(tr_handle, slice(0, 10000))
+vaX = transform(vaX)
+vis_idxs = py_rng.sample(np.arange(len(vaX)), nvis)
+vaX_vis = inverse_transform(vaX[vis_idxs])
+color_grid_vis(vaX_vis, (14, 14), 'samples/%s_etl_test.png'%desc)
+sample_zmb = floatX(np_rng.uniform(-1., 1., size=(nvis, nz)))
 vaX = vaX.reshape(len(vaX), -1)
 
 # DEFINE NETWORKS.
