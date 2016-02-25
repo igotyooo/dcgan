@@ -28,6 +28,7 @@ def transform(X):
 def inverse_transform(X):
     X = (X.reshape(-1, nc, npx, npx).transpose(0, 2, 3, 1)+1.)/2.
     return X
+
 # SET PARAMETERS.
 k = 1             # # of discrim updates for each gen update
 l2 = 1e-5         # l2 weight decay
