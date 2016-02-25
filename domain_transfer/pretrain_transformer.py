@@ -20,29 +20,30 @@ from lib.metrics import nnc_score, nnd_score
 from lib.theano_utils import floatX, sharedX
 from lib.data_utils import OneHot, shuffle, iter_data, center_crop, patch
 from load import faces
-def transform( X ):
+def transform( X, npx ):
     assert X[ 0 ].shape == ( npx, npx, 3 ) or X[ 0 ].shape == ( 3, npx, npx )
     if X[ 0 ].shape == ( npx, npx, 3 ):
         X = X.transpose( 0, 3, 1, 2 )
     return floatX( X / 127.5 - 1. )
-def inverse_transform( X ):
+def inverse_transform( X, npx ):
     X = ( X.reshape( -1, nc, npx, npx ).transpose( 0, 2, 3, 1 ) + 1. ) / 2.
     return X
 
 # SET PARAMETERS.
-k = 1             # # of discrim updates for each gen update
-l2 = 1e-5         # l2 weight decay
-nvis = 196        # # of samples to visualize during training
-b1 = 0.5          # momentum term of adam
+k = 1             # # of discrim updates for each gen update.
+l2 = 1e-5         # l2 weight decay.
+nvis = 196        # # of samples to visualize during training.
+b1 = 0.5          # momentum term of adam.
 nz = 100 	  # # dim of central activation of transformer.
-nc = 3            # # of channels in image
-nbatch = 128      # # of examples in batch
-npx = 64          # # of pixels width/height of images
-ntf = 128         # # of transformer filters in last conv layer
-niter = 25        # # of iter at starting learning rate
-niter_decay = 0   # # of iter to linearly decay learning rate to zero
-lr = 0.0002       # initial learning rate for adam
-ntrain = 182236   # # of examples to train on
+nc = 3            # # of channels in image.
+nbatch = 128      # # of examples in batch.
+npx_in = 128      # # of pixels width/height of output images.
+npx_out = 64      # # of pixels width/height of input images.
+ntf = 128         # # of transformer filters in last conv layer.
+niter = 25        # # of iter at starting learning rate.
+niter_decay = 0   # # of iter to linearly decay learning rate to zero.
+lr = 0.0002       # initial learning rate for adam.
+ntrain = 182236   # # of examples to train on.
 
 # FILE I/O.
 desc = 'pretrain_transformer'
@@ -150,7 +151,7 @@ n_examples = 0
 t = time(  )
 for epoch in range( niter ):
     for ISb, in tqdm( tr_stream.get_epoch_iterator(  ), total = ntrain / nbatch ):
-        ISb = transform( ISb )
+        ISb = transform( ISb, npx_in )
         ITb = ISb # Should be fixed.
         cost = _train_t( ISb, ITb )
         n_updates += 1
@@ -160,8 +161,8 @@ for epoch in range( niter ):
     print '%.0f %.4f'%( epoch, t_cost )
     f_log.write( json.dumps( dict( zip( log_fields, log ) ) ) + '\n' )
     f_log.flush(  )
-    samples = np.asarray( _transform( imb ) )
-    color_grid_vis( inverse_transform( samples ), ( 14, 14 ),
+    samples = np.asarray( _transform( imb, npx_out ) )
+    color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
             'samples/%s/%d.png'%( desc, n_epochs ) )
     n_epochs += 1
     if n_epochs > niter:
