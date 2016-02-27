@@ -72,9 +72,10 @@ class Datain:
     def load( self, im_side, keep_aspect ):
         num_im = len( self.impaths )
         ims = np.zeros( ( num_im, im_side, im_side, 3 ), np.uint8 )
+        print( 'Load data (%d, %d, %d, %d)' % ims.shape )
         for i in range( num_im ):
             if np.mod( i, num_im / 10 ) == 0:
-                print( 'im %06d / %06d' % ( i, num_im ) )
+                print( '%d%% (im %06d / %06d)' % ( np.round( i * 100. / num_im ), i, num_im ) )
             im = scipy.misc.imread( self.impaths[ i ] )
             if keep_aspect == True:
                 nr, nc, _ = im.shape
@@ -82,16 +83,16 @@ class Datain:
                     nc = int( np.floor( float( nc ) * float( im_side ) / float( nr ) ) )
                     nr = im_side
                     im_ = scipy.misc.imresize( im, [ nr, nc, 3 ] )
-                    mleft = np.round( float( nr - nc ) / 2.0 )
+                    mleft = int( np.round( float( nr - nc ) / 2.0 ) )
                     mright = im_side - nc - mleft
                     mleft = 255 * np.ones( ( im_side, mleft, 3 ), np.uint8 )
                     mright = 255 * np.ones( ( im_side, mright, 3 ), np.uint8 )
-                        im_ = np.concatenate( ( mleft, im_, mright ), axis = 1 )
+                    im_ = np.concatenate( ( mleft, im_, mright ), axis = 1 )
                 elif nr < nc:
                     nr = int( np.floor( float( nr ) * float( im_side ) / float( nc ) ) )
                     nc = im_side
                     im_ = scipy.misc.imresize( im, [ nr, nc, 3 ] )
-                    mtop = np.round( float( nc - nr ) / 2.0 )
+                    mtop = int( np.round( float( nc - nr ) / 2.0 ) )
                     mbttm = im_side - nr - mtop
                     mtop = 255 * np.ones( ( mtop, im_side, 3 ), np.uint8 )
                     mbttm = 255 * np.ones( ( mbttm, im_side, 3 ), np.uint8 )
