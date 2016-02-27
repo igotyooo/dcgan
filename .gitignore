@@ -5,6 +5,7 @@ faces/samples
 faces/models
 faces/logs
 *.out
+*.npy
 
 # Backup files.
 *.swp
