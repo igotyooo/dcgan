@@ -16,6 +16,8 @@ class Datain:
         self.tset_val = [  ]
         self.cls1_val = [  ]
         self.cls2_val = [  ]
+        self.cls1_names = [  ]
+        self.cls2_names = [  ]
     def set_LookBook( self ):
         # Set param.
         src_dir = '/nickel/datain/lookbook'
@@ -68,6 +70,8 @@ class Datain:
         self.tset_val = tset_val
         self.cls1_val = cls1_val
         self.cls2_val = cls2_val
+        self.cls1_names = cid2name
+        self.cls2_names = colid2name
         print( 'Done.' )
     def shuffle( self ):
         np.random.seed( 0 )
