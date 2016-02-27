@@ -70,7 +70,7 @@ class Datain:
         self.cls2_val = cls2_val
         print( 'Done.' )
     def load( self, im_side, keep_aspect ):
-        dname = './dataout/'
+        dname = os.path.join( './dataout/', self.name.upper(  ) )
         if not os.path.exists( dname ):
             os.makedirs( dname )
         fname = 'DI_%s_IS%d_KA%d.npy' % ( self.name.upper(  ), im_side, keep_aspect )
