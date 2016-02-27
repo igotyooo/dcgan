@@ -70,10 +70,14 @@ class Datain:
         self.cls2_val = cls2_val
         print( 'Done.' )
     def load( self, im_side, keep_aspect ):
+        dname = './dataout/'
+        if not os.path.exists( dname ):
+            os.makedirs( dname )
         fname = 'DI_%s_IS%d_KA%d.npy' % ( self.name.upper(  ), im_side, keep_aspect )
+        fpath = os.path.join( dname, fname )
         try:
             print( 'Try to load datain: %s' % fname )
-            ims = np.load( fname )
+            ims = np.load( fpath )
         except:
             num_im = len( self.impaths )
             ims = np.zeros( ( num_im, im_side, im_side, 3 ), np.uint8 )
@@ -105,7 +109,7 @@ class Datain:
                 else:
                     im_ = scipy.misc.imresize( im, [ im_side, im_side, 3 ] )
                 ims[ i, :, :, : ] = im_
-            print( 'Save datain: %s' % fname )
-            np.save( fname, ims )
+            print( 'Save datain: %s' % fpath )
+            np.save( fpath, ims )
         print( 'Done.' )
         return ims
