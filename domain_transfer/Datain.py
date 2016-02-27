@@ -69,6 +69,13 @@ class Datain:
         self.cls1_val = cls1_val
         self.cls2_val = cls2_val
         print( 'Done.' )
+    def shuffle( self ):
+        np.random.seed( 0 )
+        rp = np.random.permutation( len( self.sset_tr ) )
+        self.sset_tr = self.sset_tr.take( rp )
+        self.tset_tr = self.tset_tr.take( rp )
+        self.cls1_tr = self.cls1_tr.take( rp )
+        self.cls2_tr = self.cls2_tr.take( rp )
     def load( self, im_side, keep_aspect ):
         dname = os.path.join( './dataout/', self.name.upper(  ) )
         if not os.path.exists( dname ):
