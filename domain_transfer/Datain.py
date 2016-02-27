@@ -70,34 +70,42 @@ class Datain:
         self.cls2_val = cls2_val
         print( 'Done.' )
     def load( self, im_side, keep_aspect ):
-        num_im = len( self.impaths )
-        ims = np.zeros( ( num_im, im_side, im_side, 3 ), np.uint8 )
-        print( 'Load data (%d, %d, %d, %d)' % ims.shape )
-        for i in range( num_im ):
-            if np.mod( i, num_im / 10 ) == 0:
-                print( '%d%% (im %06d / %06d)' % ( np.round( i * 100. / num_im ), i, num_im ) )
-            im = scipy.misc.imread( self.impaths[ i ] )
-            if keep_aspect == True:
-                nr, nc, _ = im.shape
-                if nr > nc:
-                    nc = int( np.floor( float( nc ) * float( im_side ) / float( nr ) ) )
-                    nr = im_side
-                    im_ = scipy.misc.imresize( im, [ nr, nc, 3 ] )
-                    mleft = int( np.round( float( nr - nc ) / 2.0 ) )
-                    mright = im_side - nc - mleft
-                    mleft = 255 * np.ones( ( im_side, mleft, 3 ), np.uint8 )
-                    mright = 255 * np.ones( ( im_side, mright, 3 ), np.uint8 )
-                    im_ = np.concatenate( ( mleft, im_, mright ), axis = 1 )
-                elif nr < nc:
-                    nr = int( np.floor( float( nr ) * float( im_side ) / float( nc ) ) )
-                    nc = im_side
-                    im_ = scipy.misc.imresize( im, [ nr, nc, 3 ] )
-                    mtop = int( np.round( float( nc - nr ) / 2.0 ) )
-                    mbttm = im_side - nr - mtop
-                    mtop = 255 * np.ones( ( mtop, im_side, 3 ), np.uint8 )
-                    mbttm = 255 * np.ones( ( mbttm, im_side, 3 ), np.uint8 )
-                    im_ = np.concatenate( ( mtop, im_, mbttm ), axis = 0 )
-            else:
-                im_ = scipy.misc.imresize( im, [ im_side, im_side, 3 ] )
-            ims[ i, :, :, : ] = im_
+        fname = 'DI_%s_IS%d_KA%d.npy' % ( self.name.upper(  ), im_side, keep_aspect )
+        try:
+            print( 'Try to load datain: %s' % fname )
+            ims = np.load( fname )
+        except:
+            num_im = len( self.impaths )
+            ims = np.zeros( ( num_im, im_side, im_side, 3 ), np.uint8 )
+            print( 'Make datain. (%d, %d, %d, %d)' % ims.shape )
+            for i in range( num_im ):
+                if np.mod( i, num_im / 10 ) == 0:
+                    print( '%d%% (im %06d / %06d)' % ( np.round( i * 100. / num_im ), i, num_im ) )
+                im = scipy.misc.imread( self.impaths[ i ] )
+                if keep_aspect == True:
+                    nr, nc, _ = im.shape
+                    if nr > nc:
+                        nc = int( np.floor( float( nc ) * float( im_side ) / float( nr ) ) )
+                        nr = im_side
+                        im_ = scipy.misc.imresize( im, [ nr, nc, 3 ] )
+                        mleft = int( np.round( float( nr - nc ) / 2.0 ) )
+                        mright = im_side - nc - mleft
+                        mleft = 255 * np.ones( ( im_side, mleft, 3 ), np.uint8 )
+                        mright = 255 * np.ones( ( im_side, mright, 3 ), np.uint8 )
+                        im_ = np.concatenate( ( mleft, im_, mright ), axis = 1 )
+                    elif nr < nc:
+                        nr = int( np.floor( float( nr ) * float( im_side ) / float( nc ) ) )
+                        nc = im_side
+                        im_ = scipy.misc.imresize( im, [ nr, nc, 3 ] )
+                        mtop = int( np.round( float( nc - nr ) / 2.0 ) )
+                        mbttm = im_side - nr - mtop
+                        mtop = 255 * np.ones( ( mtop, im_side, 3 ), np.uint8 )
+                        mbttm = 255 * np.ones( ( mbttm, im_side, 3 ), np.uint8 )
+                        im_ = np.concatenate( ( mtop, im_, mbttm ), axis = 0 )
+                else:
+                    im_ = scipy.misc.imresize( im, [ im_side, im_side, 3 ] )
+                ims[ i, :, :, : ] = im_
+            print( 'Save datain: %s' % fname )
+            np.save( fname, ims )
+        print( 'Done.' )
         return ims
