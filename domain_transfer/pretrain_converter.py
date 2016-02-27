@@ -3,8 +3,6 @@ import os
 import json
 from time import time
 import numpy as np
-from tqdm import tqdm
-from matplotlib import pyplot as plt
 from sklearn.externals import joblib
 import theano
 import theano.tensor as T
@@ -19,7 +17,7 @@ from lib.ops import batchnorm, conv_cond_concat, deconv, dropout, l2normalize
 from lib.metrics import nnc_score, nnd_score
 from lib.theano_utils import floatX, sharedX
 from lib.data_utils import OneHot, shuffle, iter_data, center_crop, patch
-from load import faces
+from Datain import Datain
 def transform( X, npx ):
     assert X[ 0 ].shape == ( npx, npx, 3 ) or X[ 0 ].shape == ( 3, npx, npx )
     if X[ 0 ].shape == ( npx, npx, 3 ):
@@ -43,27 +41,7 @@ ncf = 128         # # of converter filters in last conv layer.
 niter = 25        # # of iter at starting learning rate.
 niter_decay = 0   # # of iter to linearly decay learning rate to zero.
 lr = 0.0002       # initial learning rate for adam.
-ntrain = 182236   # # of examples to train on.
-
-# FILE I/O.
-desc = 'pretrain_converter'
-model_dir = 'models/%s'%desc
-samples_dir = 'samples/%s'%desc
-if not os.path.exists( 'logs/' ):
-    os.makedirs( 'logs/' )
-if not os.path.exists( model_dir ):
-    os.makedirs( model_dir )
-if not os.path.exists( samples_dir ):
-    os.makedirs( samples_dir )
-f_log = open( 'logs/%s.ndjson'%desc, 'wb' )
-log_fields = [
-    'n_epochs', 
-    'n_updates', 
-    'n_examples', 
-    'n_seconds',
-    'cost',]
-tr_data, te_data, tr_stream, val_stream, te_stream = faces( ntrain = ntrain )
-tr_handle = tr_data.open(  )
+shuffle = True    # Suffling training sample sequance.
 
 # DEFINE NETWORKS.
 relu = activations.Rectify(  )
@@ -139,6 +117,34 @@ _train_c = theano.function( [ IS, IT ], cost, updates = c_updates )
 _convert = theano.function( [ IS ], IT_hat )
 print '%.2f seconds to compile theano functions'%( time(  ) - t )
 
+# PREPARE FOR DATAIN.
+di = Datain(  )
+di.set_LookBook(  )
+ims_s = di.load( npx_in, True )
+ims_t = di.load( npx_out, True )
+if shuffle:
+    di.shuffle(  )
+
+# PREPARE FOR DATAOUT.
+dataout = os.path.join( './dataout/', di.name.upper(  ) )
+desc = 'pretrain_converter'.upper(  )
+model_dir = os.path.join( dataout, desc, 'models'.upper(  ) )
+samples_dir = os.path.join( dataout, desc, 'samples'.upper(  ) )
+logs_dir = os.path.join( dataout, desc )
+if not os.path.exists( logs_dir ):
+    os.makedirs( logs_dir )
+if not os.path.exists( model_dir ):
+    os.makedirs( model_dir )
+if not os.path.exists( samples_dir ):
+    os.makedirs( samples_dir )
+f_log = open( os.path.join( logs_dir, '%s.ndjson' % desc ), 'wb' )
+log_fields = [
+    'n_epochs', 
+    'n_updates', 
+    'n_examples', 
+    'n_seconds',
+    'cost',]
+
 # DO THE JOB.
 print desc.upper(  )
 n_updates = 0
@@ -148,23 +154,29 @@ n_updates = 0
 n_examples = 0
 t = time(  )
 for epoch in range( niter ):
-    for ISb, in tqdm( tr_stream.get_epoch_iterator(  ), total = ntrain / nbatch ):
-        ISb = transform( ISb, npx_in )
-        ITb = ISb # Should be fixed.
+    num_batches = int( np.ceil( di.sset_tr.shape[ 0 ] / float( nbatch ) ) )
+    n_epochs += 1
+    for idx in range( num_batches ):
+        idxs = idx * nbatch
+        idxe = min( idx * nbatch + nbatch, di.sset_tr.shape[ 0 ] )
+        ISb = transform( ims_s.take( di.sset_tr[ idxs : idxe ], axis = 0 ), npx_in )
+        ITb = transform( ims_t.take( di.tset_tr[ idxs : idxe ], axis = 0 ), npx_out )
         cost = _train_c( ISb, ITb )
         n_updates += 1
         n_examples += len( ISb )
+        if np.mod( idx, num_batches / 20 ) == 0:
+            prog = np.round( idx * 100. / num_batches )
+            print( 'Epoch %02d: %03d%% (batch %06d / %06d), cost = %.4f' 
+                    % ( n_epochs, prog, idx + 1, num_batches, float( cost ) ) )
     c_cost = float( cost )
     log = [ n_epochs, n_updates, n_examples, time(  ) - t, c_cost ]
-    print '%.0f %.4f'%( epoch, c_cost )
     f_log.write( json.dumps( dict( zip( log_fields, log ) ) ) + '\n' )
     f_log.flush(  )
-    samples = np.asarray( _convert( imb, npx_out ) )
+    samples = np.asarray( _convert( ISb ) )
     color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
-            'samples/%s/%d.png'%( desc, n_epochs ) )
-    n_epochs += 1
+            os.path.join( samples_dir, '%03d.png' % n_epochs ) )
     if n_epochs > niter:
         lrt.set_value( floatX( lrt.get_value(  ) - lr / niter_decay ) )
     if n_epochs in [ 1, 2, 3, 4, 5, 10, 15, 20, 25 ]:
         joblib.dump( [ p.get_value(  ) for p in convert_params ],
-                'models/%s/%d_convert_params.jl'%( desc, n_epochs ) )
+                os.path.join( model_dir, '%03d.jl' % n_epochs ) )
