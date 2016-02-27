@@ -61,8 +61,7 @@ log_fields = [
     'n_updates', 
     'n_examples', 
     'n_seconds',
-    'cost',
-]
+    'cost',]
 tr_data, te_data, tr_stream, val_stream, te_stream = faces( ntrain = ntrain )
 tr_handle = tr_data.open(  )
 
@@ -75,9 +74,8 @@ bce = T.nnet.binary_crossentropy
 tifn = inits.Normal( scale = 0.02 )
 gain_ifn = inits.Normal( loc = 1., scale = 0.02 )
 bias_ifn = inits.Constant( c = 0. )
-
-tw0  = tifn( ( ntf / 2, nc, 5, 5 ), 'tw0' )
-tw1  = tifn( ( ntf, ntf / 2, 5, 5 ), 'tw1' )
+tw0 = tifn( ( ntf / 2, nc, 5, 5 ), 'tw0' )
+tw1 = tifn( ( ntf, ntf / 2, 5, 5 ), 'tw1' )
 tg1 = gain_ifn( ntf, 'tg1' )
 tb1 = bias_ifn( ntf, 'tb1' )
 tw2 = tifn( ( ntf * 2, ntf, 5, 5 ), 'tw2' )
