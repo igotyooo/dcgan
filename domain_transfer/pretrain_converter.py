@@ -3,14 +3,11 @@ import os
 import json
 from time import time
 import numpy as np
-from sklearn.externals import joblib
 import theano
 import theano.tensor as T
 from theano.sandbox.cuda.dnn import dnn_conv
 sys.path.append( '..' )
-from lib import activations
-from lib import updates
-from lib import inits
+from lib import activations, updates, inits
 from lib.vis import color_grid_vis
 from lib.ops import batchnorm, conv_cond_concat, deconv, dropout, l2normalize
 from lib.theano_utils import floatX, sharedX
@@ -172,9 +169,17 @@ n_updates = 0
 n_examples = 0
 t = time(  )
 for epoch in range( niter ):
+    # Load pre-trained param if exists.
+    n_epochs += 1
+    mpath = os.path.join( model_dir, '%03d.npy' % n_epochs )
+    if os.path.exists( mpath ):
+        print( 'Epoch %02d: Load.' % n_epochs )
+        data = np.load( mpath )
+        for pi in range( len( convert_params ) ):
+            convert_params[ pi ].set_value( data[ pi ] )
+        continue
     # Training.
     num_batches = int( np.ceil( di.sset_tr.shape[ 0 ] / float( nbatch ) ) )
-    n_epochs += 1
     for idx in range( num_batches ):
         idxs = idx * nbatch
         idxe = min( idx * nbatch + nbatch, di.sset_tr.shape[ 0 ] )
@@ -200,8 +205,5 @@ for epoch in range( niter ):
     color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
             os.path.join( samples_dir, 'VAL%03dT.png' % n_epochs ) )
     # Save network.
-    if n_epochs > niter:
-        lrt.set_value( floatX( lrt.get_value(  ) - lr / niter_decay ) )
-    if n_epochs in [ 1, 2, 3, 4, 5, 10, 15, 20, 25 ]:
-        joblib.dump( [ p.get_value(  ) for p in convert_params ],
-                os.path.join( model_dir, '%03d.jl' % n_epochs ) )
+    print( 'Epoch %02d: Save.' % n_epochs )
+    np.save( mpath, [ p.get_value(  ) for p in convert_params ] )
