@@ -4,7 +4,7 @@ data/
 faces/samples
 faces/models
 faces/logs
-domain_transfer/dataout
+dtgan/dataout
 *.out
 *.npy
 
