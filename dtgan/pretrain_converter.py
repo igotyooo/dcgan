@@ -28,13 +28,13 @@ nvis = 14         # # of samples to visualize during training.
 b1 = 0.5          # momentum term of adam.
 nz = 100 	  # # dim of central activation of converter.
 nc = 3            # # of channels in image.
-batch_size = 128      # # of examples in batch.
+batch_size = 128  # # of examples in batch.
 npx_s = 128       # # of pixels width/height of source images.
 npx_t = 64        # # of pixels width/height of target images.
-ncf = 128         # # of converter filters in last conv layer.
+nf = 128          # Primary # of filters.
 niter = 25        # # of iter at starting learning rate.
 niter_decay = 0   # # of iter to linearly decay learning rate to zero.
-lr = 0.0002       # initial learning rate for adam.
+lr = 0.0002       # Initial learning rate for adam.
 shuffle = True    # Suffling training sample sequance.
 
 # DEFINE NETWORKS.
@@ -46,35 +46,35 @@ bce = T.nnet.binary_crossentropy
 filt_ifn = inits.Normal( scale = 0.02 )
 gain_ifn = inits.Normal( loc = 1., scale = 0.02 )
 bias_ifn = inits.Constant( c = 0. )
-cw0 = filt_ifn( ( ncf / 2, nc, 5, 5 ), 'cw0' )
-cw1 = filt_ifn( ( ncf, ncf / 2, 5, 5 ), 'cw1' )
-cg1 = gain_ifn( ncf, 'cg1' )
-cb1 = bias_ifn( ncf, 'cb1' )
-cw2 = filt_ifn( ( ncf * 2, ncf, 5, 5 ), 'cw2' )
-cg2 = gain_ifn( ( ncf * 2 ), 'cg2' )
-cb2 = bias_ifn( ( ncf * 2 ), 'cb2' )
-cw3 = filt_ifn( ( ncf * 4, ncf * 2, 5, 5 ), 'cw3' )
-cg3 = gain_ifn( ( ncf * 4 ), 'cg3' )
-cb3 = bias_ifn( ( ncf * 4 ), 'cb3' )
-cw4 = filt_ifn( ( ncf * 8, ncf * 4, 5, 5 ), 'cw4' )
-cg4 = gain_ifn( ( ncf * 8 ), 'cg4' )
-cb4 = bias_ifn( ( ncf * 8 ), 'cb4' )
-cw5 = filt_ifn( ( nz, ncf * 8, 4, 4 ), 'cw5' )
+cw0 = filt_ifn( ( nf / 2, nc, 5, 5 ), 'cw0' )
+cw1 = filt_ifn( ( nf, nf / 2, 5, 5 ), 'cw1' )
+cg1 = gain_ifn( nf, 'cg1' )
+cb1 = bias_ifn( nf, 'cb1' )
+cw2 = filt_ifn( ( nf * 2, nf, 5, 5 ), 'cw2' )
+cg2 = gain_ifn( ( nf * 2 ), 'cg2' )
+cb2 = bias_ifn( ( nf * 2 ), 'cb2' )
+cw3 = filt_ifn( ( nf * 4, nf * 2, 5, 5 ), 'cw3' )
+cg3 = gain_ifn( ( nf * 4 ), 'cg3' )
+cb3 = bias_ifn( ( nf * 4 ), 'cb3' )
+cw4 = filt_ifn( ( nf * 8, nf * 4, 5, 5 ), 'cw4' )
+cg4 = gain_ifn( ( nf * 8 ), 'cg4' )
+cb4 = bias_ifn( ( nf * 8 ), 'cb4' )
+cw5 = filt_ifn( ( nz, nf * 8, 4, 4 ), 'cw5' )
 cg5 = gain_ifn( nz, 'cg5' )
 cb5 = bias_ifn( nz, 'cb5' )
-cw5d = filt_ifn( ( ncf * 8 * 4 * 4, nz, 1, 1 ), 'cw5d' )
-cg5d = gain_ifn( ncf * 8 * 4 * 4, 'cg5d' )
-cb5d = bias_ifn( ncf * 8 * 4 * 4, 'cb5d' )
-cw4d = filt_ifn( ( ncf * 8, ncf * 4, 5, 5 ), 'cw4d' )
-cg4d = gain_ifn( ( ncf * 4 ), 'cg4d' )
-cb4d = bias_ifn( ( ncf * 4 ), 'cb4d' )
-cw3d = filt_ifn( ( ncf * 4, ncf * 2, 5, 5 ), 'cw3d' )
-cg3d = gain_ifn( ( ncf * 2 ), 'cg3d' )
-cb3d = bias_ifn( ( ncf * 2 ), 'cb3d' )
-cw2d = filt_ifn( ( ncf * 2, ncf, 5, 5 ), 'cw2d' )
-cg2d = gain_ifn( ( ncf ), 'cg2d' )
-cb2d = bias_ifn( ( ncf ), 'cb2d' )
-cw1d = filt_ifn( ( ncf, nc, 5, 5 ), 'cw1d' )
+cw5d = filt_ifn( ( nf * 8 * 4 * 4, nz, 1, 1 ), 'cw5d' )
+cg5d = gain_ifn( nf * 8 * 4 * 4, 'cg5d' )
+cb5d = bias_ifn( nf * 8 * 4 * 4, 'cb5d' )
+cw4d = filt_ifn( ( nf * 8, nf * 4, 5, 5 ), 'cw4d' )
+cg4d = gain_ifn( ( nf * 4 ), 'cg4d' )
+cb4d = bias_ifn( ( nf * 4 ), 'cb4d' )
+cw3d = filt_ifn( ( nf * 4, nf * 2, 5, 5 ), 'cw3d' )
+cg3d = gain_ifn( ( nf * 2 ), 'cg3d' )
+cb3d = bias_ifn( ( nf * 2 ), 'cb3d' )
+cw2d = filt_ifn( ( nf * 2, nf, 5, 5 ), 'cw2d' )
+cg2d = gain_ifn( ( nf ), 'cg2d' )
+cb2d = bias_ifn( ( nf ), 'cb2d' )
+cw1d = filt_ifn( ( nf, nc, 5, 5 ), 'cw1d' )
 converter_params = [ cw0, cw1, cg1, cb1, cw2, cg2, cb2, cw3, cg3, cb3, cw4, cg4, cb4, cw5, cg5, cb5,
         cw5d, cg5d, cb5d, cw4d, cg4d, cb4d, cw3d, cg3d, cb3d, cw2d, cg2d, cb2d, cw1d ]
 def converter( IS, w0, w1, g1, b1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b5,
@@ -86,7 +86,7 @@ def converter( IS, w0, w1, g1, b1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b
     h4 = lrelu( batchnorm( dnn_conv( h3, w4, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4, b = b4 ) )
     h5 = lrelu( batchnorm( dnn_conv( h4, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5, b = b5 ) )
     h5d = relu( batchnorm( dnn_conv( h5, w5d, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5d, b = b5d ) )
-    h5d = h5d.reshape( ( h5d.shape[0], ncf * 8, 4, 4 ) )
+    h5d = h5d.reshape( ( h5d.shape[0], nf * 8, 4, 4 ) )
     h4d = relu( batchnorm( deconv( h5d, w4d, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4d, b = b4d ) )
     h3d = relu( batchnorm( deconv( h4d, w3d, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g3d, b = b3d ) )
     h2d = relu( batchnorm( deconv( h3d, w2d, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2d, b = b2d ) )
