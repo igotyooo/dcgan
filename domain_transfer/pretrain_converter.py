@@ -145,6 +145,27 @@ log_fields = [
     'n_seconds',
     'cost',]
 
+# PLOT SOURCE/TARGET SAMPLE IMAGES.
+np.random.seed( 0 )
+vis_tr = np.random.permutation( len( di.sset_tr ) )
+vis_tr = vis_tr[ 0 : nvis ]
+vis_ims_tr_s = ims_t.take( di.sset_tr.take( vis_tr ), axis = 0 )
+vis_ims_tr_t = ims_t.take( di.tset_tr.take( vis_tr ), axis = 0 )
+color_grid_vis( vis_ims_tr_s, ( 14, 14 ),
+            os.path.join( samples_dir, 'TR000S.png' ) )
+color_grid_vis( vis_ims_tr_t, ( 14, 14 ),
+            os.path.join( samples_dir, 'TR000T.png' ) )
+vis_ims_tr_s = transform( ims_s.take( di.sset_tr.take( vis_tr ), axis = 0 ), npx_in )
+vis_val = np.random.permutation( len( di.sset_val ) )
+vis_val = vis_val[ 0 : nvis ]
+vis_ims_val_s = ims_t.take( di.sset_val.take( vis_val ), axis = 0 )
+vis_ims_val_t = ims_t.take( di.tset_val.take( vis_val ), axis = 0 )
+color_grid_vis( vis_ims_val_s, ( 14, 14 ),
+            os.path.join( samples_dir, 'VAL000S.png' ) )
+color_grid_vis( vis_ims_val_t, ( 14, 14 ),
+            os.path.join( samples_dir, 'VAL000T.png' ) )
+vis_ims_val_s = transform( ims_s.take( di.sset_val.take( vis_val ), axis = 0 ), npx_in )
+
 # DO THE JOB.
 print desc.upper(  )
 n_updates = 0
@@ -154,6 +175,7 @@ n_updates = 0
 n_examples = 0
 t = time(  )
 for epoch in range( niter ):
+    # Training.
     num_batches = int( np.ceil( di.sset_tr.shape[ 0 ] / float( nbatch ) ) )
     n_epochs += 1
     for idx in range( num_batches ):
@@ -168,13 +190,19 @@ for epoch in range( niter ):
             prog = np.round( idx * 100. / num_batches )
             print( 'Epoch %02d: %03d%% (batch %06d / %06d), cost = %.4f' 
                     % ( n_epochs, prog, idx + 1, num_batches, float( cost ) ) )
+    # Leave logs.
     c_cost = float( cost )
     log = [ n_epochs, n_updates, n_examples, time(  ) - t, c_cost ]
     f_log.write( json.dumps( dict( zip( log_fields, log ) ) ) + '\n' )
     f_log.flush(  )
-    samples = np.asarray( _convert( ISb ) )
+    # Sample visualization.
+    samples = np.asarray( _convert( vis_ims_tr_s ) )
     color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
-            os.path.join( samples_dir, '%03d.png' % n_epochs ) )
+            os.path.join( samples_dir, 'TR%03dT.png' % n_epochs ) )
+    samples = np.asarray( _convert( vis_ims_val_s ) )
+    color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
+            os.path.join( samples_dir, 'VAL%03dT.png' % n_epochs ) )
+    # Save network.
     if n_epochs > niter:
         lrt.set_value( floatX( lrt.get_value(  ) - lr / niter_decay ) )
     if n_epochs in [ 1, 2, 3, 4, 5, 10, 15, 20, 25 ]:
