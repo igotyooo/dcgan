@@ -24,13 +24,13 @@ def inverse_transform( X, npx ):
 # SET PARAMETERS.
 k = 1             # # of discrim updates for each gen update.
 l2 = 1e-5         # l2 weight decay.
-nvis = 196        # # of samples to visualize during training.
+nvis = 14         # # of samples to visualize during training.
 b1 = 0.5          # momentum term of adam.
 nz = 100 	  # # dim of central activation of converter.
 nc = 3            # # of channels in image.
 nbatch = 128      # # of examples in batch.
-npx_in = 128      # # of pixels width/height of output images.
-npx_out = 64      # # of pixels width/height of input images.
+npx_s = 128       # # of pixels width/height of source images.
+npx_t = 64        # # of pixels width/height of target images.
 ncf = 128         # # of converter filters in last conv layer.
 niter = 25        # # of iter at starting learning rate.
 niter_decay = 0   # # of iter to linearly decay learning rate to zero.
@@ -111,13 +111,17 @@ _train_c = theano.function( [ IS, IT ], cost, updates = c_updates )
 _convert = theano.function( [ IS ], IT_hat )
 print '%.2f seconds to compile theano functions'%( time(  ) - t )
 
-# PREPARE FOR DATAIN.
+# PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
 di = Datain(  )
 di.set_LookBook(  )
-ims_s = di.load( npx_in, True )
-ims_t = di.load( npx_out, True )
+ims_ssize = di.load( npx_s, True )
+ims_tsize = di.load( npx_t, True )
 if shuffle:
     di.shuffle(  )
+sset_tr = di.d1set_tr
+tset_tr = di.d2set_tr
+sset_val = di.d1set_val
+tset_val = di.d2set_val
 
 # PREPARE FOR DATAOUT.
 dataout = os.path.join( './dataout/', di.name.upper(  ) )
@@ -141,24 +145,24 @@ log_fields = [
 
 # PLOT SOURCE/TARGET SAMPLE IMAGES.
 np.random.seed( 0 )
-vis_tr = np.random.permutation( len( di.sset_tr ) )
-vis_tr = vis_tr[ 0 : nvis ]
-vis_ims_tr_s = ims_t.take( di.sset_tr.take( vis_tr ), axis = 0 )
-vis_ims_tr_t = ims_t.take( di.tset_tr.take( vis_tr ), axis = 0 )
-color_grid_vis( vis_ims_tr_s, ( 14, 14 ),
+vis_tr = np.random.permutation( len( sset_tr ) )
+vis_tr = vis_tr[ 0 : nvis ** 2 ]
+vis_ims_tr_s = ims_tsize.take( sset_tr.take( vis_tr ), axis = 0 )
+vis_ims_tr_t = ims_tsize.take( tset_tr.take( vis_tr ), axis = 0 )
+color_grid_vis( vis_ims_tr_s, ( nvis, nvis ),
             os.path.join( samples_dir, 'TR000S.png' ) )
-color_grid_vis( vis_ims_tr_t, ( 14, 14 ),
+color_grid_vis( vis_ims_tr_t, ( nvis, nvis ),
             os.path.join( samples_dir, 'TR000T.png' ) )
-vis_ims_tr_s = transform( ims_s.take( di.sset_tr.take( vis_tr ), axis = 0 ), npx_in )
-vis_val = np.random.permutation( len( di.sset_val ) )
-vis_val = vis_val[ 0 : nvis ]
-vis_ims_val_s = ims_t.take( di.sset_val.take( vis_val ), axis = 0 )
-vis_ims_val_t = ims_t.take( di.tset_val.take( vis_val ), axis = 0 )
-color_grid_vis( vis_ims_val_s, ( 14, 14 ),
+vis_ims_tr_s = transform( ims_ssize.take( sset_tr.take( vis_tr ), axis = 0 ), npx_s )
+vis_val = np.random.permutation( len( sset_val ) )
+vis_val = vis_val[ 0 : nvis ** 2 ]
+vis_ims_val_s = ims_tsize.take( sset_val.take( vis_val ), axis = 0 )
+vis_ims_val_t = ims_tsize.take( tset_val.take( vis_val ), axis = 0 )
+color_grid_vis( vis_ims_val_s, ( nvis, nvis ),
             os.path.join( samples_dir, 'VAL000S.png' ) )
-color_grid_vis( vis_ims_val_t, ( 14, 14 ),
+color_grid_vis( vis_ims_val_t, ( nvis, nvis ),
             os.path.join( samples_dir, 'VAL000T.png' ) )
-vis_ims_val_s = transform( ims_s.take( di.sset_val.take( vis_val ), axis = 0 ), npx_in )
+vis_ims_val_s = transform( ims_ssize.take( sset_val.take( vis_val ), axis = 0 ), npx_s )
 
 # DO THE JOB.
 print desc.upper(  )
@@ -179,12 +183,12 @@ for epoch in range( niter ):
             convert_params[ pi ].set_value( data[ pi ] )
         continue
     # Training.
-    num_batches = int( np.ceil( di.sset_tr.shape[ 0 ] / float( nbatch ) ) )
+    num_batches = int( np.ceil( sset_tr.shape[ 0 ] / float( nbatch ) ) )
     for idx in range( num_batches ):
         idxs = idx * nbatch
-        idxe = min( idx * nbatch + nbatch, di.sset_tr.shape[ 0 ] )
-        ISb = transform( ims_s.take( di.sset_tr[ idxs : idxe ], axis = 0 ), npx_in )
-        ITb = transform( ims_t.take( di.tset_tr[ idxs : idxe ], axis = 0 ), npx_out )
+        idxe = min( idx * nbatch + nbatch, sset_tr.shape[ 0 ] )
+        ISb = transform( ims_ssize.take( sset_tr[ idxs : idxe ], axis = 0 ), npx_s )
+        ITb = transform( ims_tsize.take( tset_tr[ idxs : idxe ], axis = 0 ), npx_t )
         cost = _train_c( ISb, ITb )
         n_updates += 1
         n_examples += len( ISb )
@@ -199,10 +203,10 @@ for epoch in range( niter ):
     f_log.flush(  )
     # Sample visualization.
     samples = np.asarray( _convert( vis_ims_tr_s ) )
-    color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
+    color_grid_vis( inverse_transform( samples, npx_t ), ( nvis, nvis ),
             os.path.join( samples_dir, 'TR%03dT.png' % n_epochs ) )
     samples = np.asarray( _convert( vis_ims_val_s ) )
-    color_grid_vis( inverse_transform( samples, npx_out ), ( 14, 14 ),
+    color_grid_vis( inverse_transform( samples, npx_t ), ( nvis, nvis ),
             os.path.join( samples_dir, 'VAL%03dT.png' % n_epochs ) )
     # Save network.
     print( 'Epoch %02d: Save.' % n_epochs )

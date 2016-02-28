@@ -8,12 +8,12 @@ class Datain:
     def __init__( self ):
         self.name = [  ]
         self.impaths = [  ]
-        self.sset_tr = [  ]
-        self.tset_tr = [  ]
+        self.d1set_tr = [  ]
+        self.d2set_tr = [  ]
         self.cls1_tr = [  ]
         self.cls2_tr = [  ]
-        self.sset_val = [  ]
-        self.tset_val = [  ]
+        self.d1set_val = [  ]
+        self.d2set_val = [  ]
         self.cls1_val = [  ]
         self.cls2_val = [  ]
         self.cls1_names = [  ]
@@ -41,33 +41,33 @@ class Datain:
         colid2name, iid2colid = np.unique( iid2colname, return_inverse = True )
         iid2pid = np.array( iid2pid )
         iid2clean = np.array( iid2clean )
-        # Pairing source and target, and spliting train and val.
-        sset_tr = np.array( [  ], np.int )
-        tset_tr = np.array( [  ], np.int )
-        tset_val = np.array( [  ], np.int )
-        sset_val = np.array( [  ], np.int )
+        # Pairing domain-1 and domain-2, and spliting train and val.
+        d1set_tr = np.array( [  ], np.int )
+        d2set_tr = np.array( [  ], np.int )
+        d2set_val = np.array( [  ], np.int )
+        d1set_val = np.array( [  ], np.int )
         pids = np.unique( iid2pid )
         for pid in pids:
             prodiid = np.logical_and( iid2pid == pid, iid2clean == True ).nonzero(  )[ 0 ]
             natiids = np.logical_and( iid2pid == pid, iid2clean == False ).nonzero(  )[ 0 ]
             if np.random.rand( 1 ) > val_rate:
-                sset_tr = np.hstack( ( sset_tr, natiids ) )
-                tset_tr = np.hstack( ( tset_tr, np.tile( prodiid, natiids.size ) ) )
+                d1set_tr = np.hstack( ( d1set_tr, natiids ) )
+                d2set_tr = np.hstack( ( d2set_tr, np.tile( prodiid, natiids.size ) ) )
             else:
-                sset_val = np.hstack( ( sset_val, natiids ) )
-                tset_val = np.hstack( ( tset_val, np.tile( prodiid, natiids.size ) ) )
-        cls1_tr = iid2cid.take( sset_tr )
-        cls2_tr = iid2colid.take( sset_tr )
-        cls1_val = iid2cid.take( sset_val )
-        cls2_val = iid2colid.take( sset_val )
+                d1set_val = np.hstack( ( d1set_val, natiids ) )
+                d2set_val = np.hstack( ( d2set_val, np.tile( prodiid, natiids.size ) ) )
+        cls1_tr = iid2cid.take( d1set_tr )
+        cls2_tr = iid2colid.take( d1set_tr )
+        cls1_val = iid2cid.take( d1set_val )
+        cls2_val = iid2colid.take( d1set_val )
         self.name = 'LookBook'
         self.impaths = iid2impath
-        self.sset_tr = sset_tr
-        self.tset_tr = tset_tr
+        self.d1set_tr = d1set_tr
+        self.d2set_tr = d2set_tr
         self.cls1_tr = cls1_tr
         self.cls2_tr = cls2_tr
-        self.sset_val = sset_val
-        self.tset_val = tset_val
+        self.d1set_val = d1set_val
+        self.d2set_val = d2set_val
         self.cls1_val = cls1_val
         self.cls2_val = cls2_val
         self.cls1_names = cid2name
@@ -75,9 +75,9 @@ class Datain:
         print( 'Done.' )
     def shuffle( self ):
         np.random.seed( 0 )
-        rp = np.random.permutation( len( self.sset_tr ) )
-        self.sset_tr = self.sset_tr.take( rp )
-        self.tset_tr = self.tset_tr.take( rp )
+        rp = np.random.permutation( len( self.d1set_tr ) )
+        self.d1set_tr = self.d1set_tr.take( rp )
+        self.d2set_tr = self.d2set_tr.take( rp )
         self.cls1_tr = self.cls1_tr.take( rp )
         self.cls2_tr = self.cls2_tr.take( rp )
     def load( self, im_side, keep_aspect ):
