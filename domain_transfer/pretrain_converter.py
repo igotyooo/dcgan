@@ -12,11 +12,8 @@ from lib import activations
 from lib import updates
 from lib import inits
 from lib.vis import color_grid_vis
-from lib.rng import py_rng, np_rng
 from lib.ops import batchnorm, conv_cond_concat, deconv, dropout, l2normalize
-from lib.metrics import nnc_score, nnd_score
 from lib.theano_utils import floatX, sharedX
-from lib.data_utils import OneHot, shuffle, iter_data, center_crop, patch
 from Datain import Datain
 def transform( X, npx ):
     assert X[ 0 ].shape == ( npx, npx, 3 ) or X[ 0 ].shape == ( 3, npx, npx )
