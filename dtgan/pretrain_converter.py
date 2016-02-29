@@ -102,14 +102,13 @@ cost = T.mean( ( IT - IT_hat ) ** 2 )
 lrt = sharedX( lr )
 c_updater = updates.Adam( lr = lrt, b1 = b1, regularizer=updates.Regularizer( l2 = l2 ) )
 c_updates = c_updater( converter_params, cost )
-updates = c_updates
 
 # COMPILING TRAIN/TEST FUNCTIONS.
 print 'COMPILING'
 t = time(  )
 _train_c = theano.function( [ IS, IT ], cost, updates = c_updates )
 _convert = theano.function( [ IS ], IT_hat )
-print '%.2f seconds to compile theano functions'%( time(  ) - t )
+print '%.2f seconds to compile theano functions.'%( time(  ) - t )
 
 # PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
 di = Datain(  )
@@ -167,7 +166,6 @@ vis_ims_val_s = transform( ims_ssize.take( sset_val.take( vis_val ), axis = 0 ),
 # DO THE JOB.
 print desc.upper(  )
 num_update = 0
-n_check = 0
 num_epoch = 0
 num_update = 0
 num_example = 0
