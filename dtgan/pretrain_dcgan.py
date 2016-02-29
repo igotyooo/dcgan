@@ -90,7 +90,6 @@ def discrim( X, w1, w2, g2, b2, w3, g3, b3, w4, g4, b4, wy ):
     y = sigmoid( T.dot( h4, wy ) )
     return y
 
-
 # DEFINE TRAINING FUNCTION: FORWARD(COSTS) AND BACKWARD(UPDATE).
 Z = T.tensor4(  )
 IT = T.tensor4(  )
@@ -116,7 +115,6 @@ _convert = theano.function( [ Z ], IT_hat )
 _train_c = theano.function( [ Z, IT ], cost, updates = c_updates )
 _train_d = theano.function( [ Z, IT ], cost, updates = d_updates )
 print '%.2f seconds to compile theano functions.'%( time(  ) - t )
-
 
 # PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
 di = Gan(  )
