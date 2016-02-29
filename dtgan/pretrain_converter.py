@@ -110,7 +110,7 @@ _train_c = theano.function( [ IS, IT ], cost, updates = c_updates )
 _convert = theano.function( [ IS ], IT_hat )
 print '%.2f seconds to compile theano functions.'%( time(  ) - t )
 
-# PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
+# PREPARE FOR DATAIN.
 di = Datain(  )
 di.set_LookBook(  )
 ims_ssize = di.load( npx_s, True )
