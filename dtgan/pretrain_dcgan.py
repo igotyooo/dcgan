@@ -118,7 +118,7 @@ print '%.2f seconds to compile theano functions.'%( time(  ) - t )
 
 # PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
 di = Gan(  )
-di.set_Tshirts40k(  ) # di.set_LookBook(  )
+di.set_PRODUCTS(  ) # di.set_LookBook(  )
 if shuffle:
     di.shuffle(  )
 ims = di.load( npx_t, True )
