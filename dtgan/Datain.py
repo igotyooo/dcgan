@@ -6,8 +6,8 @@ import numpy as np
 sys.path.append('..')
 
 # Set paths.
-data_dir_lookbook = '/nickel/datain/lookbook'
-data_dir_tshirts40k = '/nickel/datain/tshirts40k'
+data_dir_LOOKBOOK = '/nickel/datain/LOOKBOOK'
+data_dir_PRODUCTS = '/nickel/datain/PRODUCTS'
 # Data provider for pixel-level domain transfer
 class Pldt:
     def __init__( self ):
@@ -23,12 +23,12 @@ class Pldt:
         self.cls2_val = [  ]
         self.cls1_names = [  ]
         self.cls2_names = [  ]
-    def set_LookBook( self ):
+    def set_LOOKBOOK( self ):
         # Set param.
-        src_dir = data_dir_lookbook
+        src_dir = data_dir_LOOKBOOK
         val_rate = 0.1
         # Make basic info.
-        print( 'Set LookBook.' )
+        print( 'Set LOOKBOOK.' )
         iid2impath = [ os.path.join( src_dir, f ) for f in os.listdir( src_dir ) ]
         iid2impath.sort(  )
         iid2impath = np.array( iid2impath )
@@ -65,7 +65,7 @@ class Pldt:
         cls2_tr = iid2colid.take( d1set_tr )
         cls1_val = iid2cid.take( d1set_val )
         cls2_val = iid2colid.take( d1set_val )
-        self.name = 'LookBook'
+        self.name = 'LOOKBOOK'
         self.impaths = iid2impath
         self.d1set_tr = d1set_tr
         self.d2set_tr = d2set_tr
@@ -93,22 +93,22 @@ class Gan:
     def __init__( self ):
         self.name = [  ]
         self.impaths = [  ]
-    def set_LookBook( self ):
-        src_dir = data_dir_lookbook
-        print( 'Set LookBook.' )
+    def set_LOOKBOOK( self ):
+        src_dir = data_dir_LOOKBOOK
+        print( 'Set LOOKBOOK.' )
         iid2impath = [ os.path.join( src_dir, f ) for f in os.listdir( src_dir ) ]
         iid2impath.sort(  )
         iid2impath = np.array( iid2impath )
-        self.name = 'LookBook'
+        self.name = 'LOOKBOOK'
         self.impaths = iid2impath
         print( 'Done.' )
-    def set_Tshirts40k( self ):
-        src_dir = data_dir_tshirts40k
-        print( 'Set Tshirts40k.' )
+    def set_PRODUCTS( self ):
+        src_dir = data_dir_PRODUCTS
+        print( 'Set PRODUCTS.' )
         iid2impath = [ os.path.join( src_dir, f ) for f in os.listdir( src_dir ) ]
         iid2impath.sort(  )
         iid2impath = np.array( iid2impath )
-        self.name = 'Tshirts40k'
+        self.name = 'PRODUCTS'
         self.impaths = iid2impath
         print( 'Done.' )
     def shuffle( self ):
