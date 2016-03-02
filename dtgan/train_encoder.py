@@ -37,7 +37,7 @@ niter = 100       # # of iter at starting learning rate.
 niter_decay = 0   # # of iter to linearly decay learning rate to zero.
 lr = 0.0002       # Initial learning rate for adam.
 shuffle = True    # Suffling training sample sequance.
-mpath_converter_dec = './dataout/TSHIRTS40K/PRETRAIN_DCGAN/MODELS/C020.npy'
+mpath_converter_dec = '/nickel/src/dcgan/dtgan/dataout/PRODUCTS/PRETRAIN_DCGAN/MODELS/C015.npy'
 
 # LOAD PRETRAINED CONVERTER-DECODER AND DISCRIMINATOR.
 data_c_d = np.load( mpath_converter_dec )
@@ -87,7 +87,7 @@ def converter( IS, w0, w1, g1, b1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b
     h2 = lrelu( batchnorm( dnn_conv( h1, w2, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2, b = b2 ) )
     h3 = lrelu( batchnorm( dnn_conv( h2, w3, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g3, b = b3 ) )
     h4 = lrelu( batchnorm( dnn_conv( h3, w4, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4, b = b4 ) )
-    h5 = lrelu( batchnorm( dnn_conv( h4, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5, b = b5 ) )
+    h5 = tanh( batchnorm( dnn_conv( h4, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5, b = b5 ) ) # <- Should be tanh()?
     h5d = relu( batchnorm( dnn_conv( h5, cw5d, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = cg5d, b = cb5d ) )
     h5d = h5d.reshape( ( h5d.shape[0], nf * 8, 4, 4 ) )
     h4d = relu( batchnorm( deconv( h5d, cw4d, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = cg4d, b = cb4d ) )
@@ -115,7 +115,7 @@ print '%.2f seconds to compile theano functions.'%( time(  ) - t )
 
 # PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
 di = Pldt(  )
-di.set_LookBook(  )
+di.set_LOOKBOOK(  )
 ims_ssize = di.load( npx_s, True )
 ims_tsize = di.load( npx_t, True )
 if shuffle:
