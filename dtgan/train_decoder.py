@@ -125,7 +125,7 @@ ims = di.load( npx_t, True )
 
 # PREPARE FOR DATAOUT.
 dataout = os.path.join( './dataout/', di.name.upper(  ) )
-desc = 'pretrain_dcgan'.upper(  )
+desc = 'train_decoder'.upper(  )
 model_dir = os.path.join( dataout, desc, 'models'.upper(  ) )
 sample_dir = os.path.join( dataout, desc, 'samples'.upper(  ) )
 log_dir = os.path.join( dataout, desc )
