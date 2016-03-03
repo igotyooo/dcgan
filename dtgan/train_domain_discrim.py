@@ -29,8 +29,8 @@ nc = 3              # # of channels in image.
 batch_size = 128    # # of examples in batch.
 npx_in = 64         # # of pixels width/height of input images.
 nf = 128            # Primary # of filters.
-niter_lr0 = 10      # # of iter at starting learning rate.
-niter = 20    # # of total iteration.
+niter_lr0 = 15      # # of iter at starting learning rate.
+niter = 20          # # of total iteration.
 lr_decay = 10       # # of iter to linearly decay learning rate to zero.
 lr = 0.0002         # Initial learning rate for adam.
 shuffle = True      # Suffling training sample sequance.
@@ -88,8 +88,7 @@ print '%.2f seconds to compile theano functions.'%( time(  ) - t )
 # PREPARE FOR DATAIN AND DEFINE SOURCE/TARGET.
 di = Pldt(  )
 di.set_LOOKBOOK(  )
-ims_ssize = di.load( npx_in, True )
-ims_tsize = di.load( npx_in, True )
+ims = di.load( npx_in, True )
 if shuffle:
     di.shuffle(  )
 sset_tr = di.d1set_tr
@@ -141,15 +140,15 @@ for epoch in range( niter ):
     for bi_tr in range( num_batch_tr ):
         bis_tr = bi_tr * batch_size
         bie_tr = min( bi_tr * batch_size + batch_size, num_sample_tr )
-        ISb_tr = ims_ssize.take( sset_tr[ bis_tr : bie_tr ], axis = 0 )
-        ITb_tr = ims_tsize.take( tset_tr[ bis_tr : bie_tr ], axis = 0 )
+        ISb_tr = ims.take( sset_tr[ bis_tr : bie_tr ], axis = 0 )
+        ITb_tr = ims.take( tset_tr[ bis_tr : bie_tr ], axis = 0 )
         this_bsize = len( ISb_tr )
         Yb_tr = np.ones( ( this_bsize, 1 ), np.float32 )
         pb_tr = pids_tr[ bis_tr : bie_tr ]
         for i in range( this_bsize ):
             if np.random.uniform(  ) > 0.5:
                 iid = tset_tr[ np.random.choice( ( pids_tr != pb_tr[ i ] ).nonzero(  )[ 0 ], 1 ) ]
-                ITb_tr[ i, :, :, : ] = ims_tsize[ iid, :, :, : ]
+                ITb_tr[ i, :, :, : ] = ims[ iid, :, :, : ]
                 Yb_tr[ i, : ] = 0.
             if np.random.uniform(  ) > 0.5:
                 ISb_tr[ i, :, :, : ] = np.fliplr( ISb_tr[ i, :, :, : ] )
@@ -183,15 +182,15 @@ for epoch in range( niter ):
     for bi_val in range( num_batch_val ):
         bis_val = bi_val * batch_size
         bie_val = min( bi_val * batch_size + batch_size, num_sample_val )
-        ISb_val = ims_ssize.take( sset_val[ bis_val : bie_val ], axis = 0 )
-        ITb_val = ims_tsize.take( tset_val[ bis_val : bie_val ], axis = 0 )
+        ISb_val = ims.take( sset_val[ bis_val : bie_val ], axis = 0 )
+        ITb_val = ims.take( tset_val[ bis_val : bie_val ], axis = 0 )
         this_bsize = len( ISb_val )
         Yb_val = np.ones( ( this_bsize, 1 ), np.float32 )
         pb_val = pids_val[ bis_val : bie_val ]
         for i in range( this_bsize ):
             if np.random.uniform(  ) > 0.5:
                 iid = tset_val[ np.random.choice( ( pids_val != pb_val[ i ] ).nonzero(  )[ 0 ], 1 ) ]
-                ITb_val[ i, :, :, : ] = ims_tsize[ iid, :, :, : ]
+                ITb_val[ i, :, :, : ] = ims[ iid, :, :, : ]
                 Yb_val[ i ] = 0.
         ISb_val = transform( ISb_val, npx_in )
         ITb_val = transform( ITb_val, npx_in )
