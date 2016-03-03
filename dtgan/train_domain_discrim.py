@@ -60,12 +60,12 @@ db5 = bias_ifn( ( nf * 16 ), 'db5' )
 dwy = filt_ifn( ( nf * 16, 1 ), 'dwy' )
 domain_discrim_params = [ dw1, dw2, dg2, db2, dw3, dg3, db3, dw4, dg4, db4, dw5, dg5, db5, dwy ]
 def domain_discrim( X, w1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b5, wy ):
-    h1_s = lrelu( dnn_conv( X, w1, subsample=( 2, 2 ), border_mode = ( 2, 2 ) ) )
-    h2_s = lrelu( batchnorm( dnn_conv( h1_s, w2, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2, b = b2 ) )
-    h3_s = lrelu( batchnorm( dnn_conv( h2_s, w3, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g3, b = b3 ) )
-    h4_s = lrelu( batchnorm( dnn_conv( h3_s, w4, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4, b = b4 ) )
-    h5_s = lrelu( batchnorm( dnn_conv( h4_s, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5, b = b5 ) )
-    y = sigmoid( T.dot( T.flatten( h5_s, 2 ), wy ) )
+    h1 = lrelu( dnn_conv( X, w1, subsample=( 2, 2 ), border_mode = ( 2, 2 ) ) )
+    h2 = lrelu( batchnorm( dnn_conv( h1, w2, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2, b = b2 ) )
+    h3 = lrelu( batchnorm( dnn_conv( h2, w3, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g3, b = b3 ) )
+    h4 = lrelu( batchnorm( dnn_conv( h3, w4, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4, b = b4 ) )
+    h5 = lrelu( batchnorm( dnn_conv( h4, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5, b = b5 ) )
+    y = sigmoid( T.dot( T.flatten( h5, 2 ), wy ) )
     return y
 
 # DEFINE TRAINING FUNCTION: FORWARD(COSTS) AND BACKWARD(UPDATE).
@@ -117,12 +117,11 @@ num_epoch = 0
 num_update = 0
 num_example = 0
 t = time(  )
-import scipy.misc
 for epoch in range( niter ):
     # Decay learning rate if needed.
     num_epoch += 1
     if num_epoch > niter_lr0:
-        print( 'Decay learning rate.' )
+        print( 'Decaying learning rate.' )
         lrt.set_value( floatX( lrt.get_value(  ) - lr / lr_decay ) )
     # Load pre-trained param if exists.
     mpath_d = os.path.join( model_dir, 'D%03d.npy' % num_epoch )
