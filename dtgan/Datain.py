@@ -17,10 +17,12 @@ class Pldt:
         self.d2set_tr = [  ]
         self.cls1_tr = [  ]
         self.cls2_tr = [  ]
+        self.pids_tr = [  ]
         self.d1set_val = [  ]
         self.d2set_val = [  ]
         self.cls1_val = [  ]
         self.cls2_val = [  ]
+        self.pids_val = [  ]
         self.cls1_names = [  ]
         self.cls2_names = [  ]
     def set_LOOKBOOK( self ):
@@ -71,10 +73,12 @@ class Pldt:
         self.d2set_tr = d2set_tr
         self.cls1_tr = cls1_tr
         self.cls2_tr = cls2_tr
+        self.pids_tr = iid2pid.take( d1set_tr )
         self.d1set_val = d1set_val
         self.d2set_val = d2set_val
         self.cls1_val = cls1_val
         self.cls2_val = cls2_val
+        self.pids_val = iid2pid.take( d1set_val )
         self.cls1_names = cid2name
         self.cls2_names = colid2name
         print( 'Done.' )
@@ -85,6 +89,7 @@ class Pldt:
         self.d2set_tr = self.d2set_tr.take( rp )
         self.cls1_tr = self.cls1_tr.take( rp )
         self.cls2_tr = self.cls2_tr.take( rp )
+        self.pids_tr = self.pids_tr.take( rp )
     def load( self, im_side, keep_aspect ):
         return load_ims( self.impaths, self.name, im_side, keep_aspect )
 
