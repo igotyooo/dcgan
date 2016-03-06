@@ -254,8 +254,8 @@ log_fields = [ '00__num_epoch', '01__num_update', '02__num_example', '03__t_spen
 # PLOT SOURCE/TARGET SAMPLE IMAGES.
 vis_tr = np.random.permutation( len( sset_tr ) )
 vis_tr = vis_tr[ 0 : nvis ** 2 ]
-vis_ims_tr_s = ims_st.take( sset_tr.take( vis_tr ), axis = 0 )
-vis_ims_tr_t = ims_st.take( tset_tr.take( vis_tr ), axis = 0 )
+vis_ims_tr_s = ims_st[ sset_tr[ vis_tr ] ]
+vis_ims_tr_t = ims_st[ tset_tr[ vis_tr ] ]
 vis_ims_tr_t_hat = _test_ced( vis_ims_tr_s )
 color_grid_vis( itf( vis_ims_tr_s, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'TR_S.png' ) )
@@ -265,8 +265,8 @@ color_grid_vis( itf( vis_ims_tr_t_hat, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'TR000T.png' ) )
 vis_val = np.random.permutation( len( sset_val ) )
 vis_val = vis_val[ 0 : nvis ** 2 ]
-vis_ims_val_s = ims_st.take( sset_val.take( vis_val ), axis = 0 )
-vis_ims_val_t = ims_st.take( tset_val.take( vis_val ), axis = 0 )
+vis_ims_val_s = ims_st[ sset_val[ vis_val ] ]
+vis_ims_val_t = ims_st[ tset_val[ vis_val ] ]
 vis_ims_val_t_hat = _test_ced( vis_ims_val_s )
 color_grid_vis( itf( vis_ims_val_s, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'VAL_S.png' ) )
@@ -325,9 +325,15 @@ for epoch in range( niter ):
         bie = min( bi * batch_size + batch_size, num_sample_st )
         this_bsize = bie - bis
         Zb = floatX( np_rng.uniform( -1., 1., size = ( this_bsize, nz ) ) )
-        ISb = ims_st.take( sset_tr[ bis : bie ], axis = 0 )
-        ITb_zr = ims_zt.take( np.random.choice( num_sample_zt, this_bsize ), axis = 0 )
-        ITb_sr = ims_st.take( tset_tr[ bis : bie ], axis = 0 )
+        ISb = ims_st[ sset_tr[ bis : bie ] ]
+        ITb_zr = ims_zt[ np.random.choice( num_sample_zt, this_bsize ) ]
+        ITb_sr = ims_st[ tset_tr[ bis : bie ] ]
+        # Flip augmentation.
+        for b in range( this_bsize ):
+            if np.random.uniform(  ) > .5:
+                ISb[ b ] = ( np.fliplr( ISb[ b ].transpose( 1, 2, 0 ) ) ).transpose( 2, 0, 1 )
+            if np.random.uniform(  ) > .5:
+                ITb_sr[ b ] = ( np.fliplr( ITb_sr[ b ].transpose( 1, 2, 0 ) ) ).transpose( 2, 0, 1 )
         # Train converter.
         cost_for_cd_z = _train_cd_z( Zb, ISb ) # Update cd * 2
         cost_for_ced_s = _train_ced_s( ISb ) # Update ced * 2
@@ -373,8 +379,8 @@ for epoch in range( niter ):
         bis = bi * batch_size
         bie = min( bi * batch_size + batch_size, num_sample_st )
         this_bsize = bie - bis
-        ISb = ims_st.take( sset_val[ bis : bie ], axis = 0 )
-        ITb_sr = ims_st.take( tset_val[ bis : bie ], axis = 0 )
+        ISb = ims_st[ sset_val[ bis : bie ] ]
+        ITb_sr = ims_st[ tset_val[ bis : bie ] ]
         # Val converter.
         cost_for_ced_s = _val_ced_s( ISb )
         cost_for_ced_s_cumm += cost_for_ced_s * this_bsize
