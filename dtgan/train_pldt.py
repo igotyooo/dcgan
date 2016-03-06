@@ -81,6 +81,7 @@ cd_b4 = bias_ifn( ( nf ), 'cd_b4' )
 cd_w5 = filt_ifn( ( nf, nc, 5, 5 ), 'cd_w5' )
 decoder_params = [ cd_w1, cd_g1, cd_b1, cd_w2, cd_g2, cd_b2, cd_w3, cd_g3, cd_b3, cd_w4, cd_g4, cd_b4, cd_w5 ]
 def decoder( z, w1, g1, b1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5 ):
+    z = z / ( ( ( z ** 2 ).sum( axis = 1 ) ) ** .5 ).reshape( ( z.shape[ 0 ], 1 ) ) # L2 nomalization.
     h1 = relu( batchnorm( T.dot( z, w1 ), g = g1, b = b1 ) )
     h1 = h1.reshape( (h1.shape[ 0 ], nf * 8, 4, 4 ) ) 
     h2 = relu( batchnorm( deconv( h1, w2, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2, b = b2 ) )
