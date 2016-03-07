@@ -141,12 +141,16 @@ lrt = sharedX( lr )
 IS = T.tensor4(  )
 IT_sr = T.tensor4(  )
 IT_sf = decoder( encoder( IS, *encoder_params ), *decoder_params )
+IT_sru = T.tensor4(  )
 YD_sr = discrim( IT_sr, *discrim_params )
 YD_sf = discrim( IT_sf, *discrim_params )
+YD_sru = discrim( IT_sru, *discrim_params )
 IST_sr = T.concatenate( [ IS, IT_sr ], axis = 1 )
 IST_sf = T.concatenate( [ IS, IT_sf ], axis = 1 )
+IST_sru = T.concatenate( [ IS, IT_sru ], axis = 1 )
 YDD_sr = domain_discrim( IST_sr, *domain_discrim_params )
 YDD_sf = domain_discrim( IST_sf, *domain_discrim_params )
+YDD_sru = domain_discrim( IST_sru, *domain_discrim_params )
 # For converter.
 cost_d_for_ced_sf = bce( YD_sf, T.ones( YD_sf.shape ) ).mean(  )
 cost_dd_for_ced_sf = bce( YDD_sf, T.ones( YDD_sf.shape ) ).mean(  )
@@ -156,13 +160,15 @@ ced_s_updates = ced_s_updater( converter_params, cost_for_ced_s )
 # For discriminator.
 cost_d_for_d_sr = bce( YD_sr, T.ones( YD_sr.shape ) ).mean(  )
 cost_d_for_d_sf = bce( YD_sf, T.zeros( YD_sf.shape ) ).mean(  )
-cost_for_d_s = cost_d_for_d_sr + cost_d_for_d_sf
+cost_d_for_d_sru = bce( YD_sru, T.ones( YD_sru.shape ) ).mean(  )
+cost_for_d_s = cost_d_for_d_sr + cost_d_for_d_sf + cost_d_for_d_sru
 d_s_updater = updates.Adam( lr = lrt, b1 = b1, regularizer = updates.Regularizer( l2 = l2 ) )
 d_s_updates = d_s_updater( discrim_params, cost_for_d_s )
 # For domain-discriminator.
 cost_dd_for_dd_sr = bce( YDD_sr, T.ones( YDD_sr.shape ) ).mean(  )
 cost_dd_for_dd_sf = bce( YDD_sf, T.zeros( YDD_sf.shape ) ).mean(  )
-cost_for_dd_s = cost_dd_for_dd_sr + cost_dd_for_dd_sf
+cost_dd_for_dd_sru = bce( YDD_sru, T.zeros( YDD_sru.shape ) ).mean(  )
+cost_for_dd_s = cost_dd_for_dd_sr + cost_dd_for_dd_sf + cost_dd_for_dd_sru
 dd_s_updater = updates.Adam( lr = lrt, b1 = b1, regularizer = updates.Regularizer( l2 = l2 ) )
 dd_s_updates = dd_s_updater( domain_discrim_params, cost_for_dd_s )
 
@@ -170,11 +176,11 @@ dd_s_updates = dd_s_updater( domain_discrim_params, cost_for_dd_s )
 print 'COMPILING'
 t = time(  )
 _train_ced_s = theano.function( [ IS ], cost_for_ced_s, updates = ced_s_updates )
-_train_d_s = theano.function( [ IS, IT_sr ], cost_for_d_s, updates = d_s_updates )
-_train_dd_s = theano.function( [ IS, IT_sr ], cost_for_dd_s, updates = dd_s_updates )
+_train_d_s = theano.function( [ IS, IT_sr, IT_sru ], cost_for_d_s, updates = d_s_updates )
+_train_dd_s = theano.function( [ IS, IT_sr, IT_sru ], cost_for_dd_s, updates = dd_s_updates )
 _val_ced_s = theano.function( [ IS ], cost_for_ced_s )
-_val_d_s = theano.function( [ IS, IT_sr ], cost_for_d_s )
-_val_dd_s = theano.function( [ IS, IT_sr ], cost_for_dd_s )
+_val_d_s = theano.function( [ IS, IT_sr, IT_sru ], cost_for_d_s )
+_val_dd_s = theano.function( [ IS, IT_sr, IT_sru ], cost_for_dd_s )
 _test_ced = theano.function( [ IS ], IT_sf )
 print '%.2f seconds to compile theano functions.' % ( time(  ) - t )
 
@@ -188,8 +194,10 @@ print( 'Done.' )
 di_st.shuffle(  )
 sset_tr = di_st.d1set_tr
 tset_tr = di_st.d2set_tr
+pset_tr = di_st.pids_tr
 sset_val = di_st.d1set_val
 tset_val = di_st.d2set_val
+pset_val = di_st.pids_val
 
 # PREPARE FOR DATAOUT.
 dataout = os.path.join( './dataout/LOOKBOOK_PRODUCTS' )
@@ -202,7 +210,7 @@ if not os.path.exists( sample_dir ):
     os.makedirs( sample_dir )
 
 # PLOT SOURCE/TARGET SAMPLE IMAGES.
-vis_tr = np.random.permutation( len( sset_tr ) )
+vis_tr = np_rng.permutation( len( sset_tr ) )
 vis_tr = vis_tr[ 0 : nvis ** 2 ]
 vis_ims_tr_s = ims_st[ sset_tr[ vis_tr ] ]
 vis_ims_tr_t = ims_st[ tset_tr[ vis_tr ] ]
@@ -213,7 +221,7 @@ color_grid_vis( itf( vis_ims_tr_t, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'TR_T.png' ) )
 color_grid_vis( itf( vis_ims_tr_t_hat, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'TR000T.png' ) )
-vis_val = np.random.permutation( len( sset_val ) )
+vis_val = np_rng.permutation( len( sset_val ) )
 vis_val = vis_val[ 0 : nvis ** 2 ]
 vis_ims_val_s = ims_st[ sset_val[ vis_val ] ]
 vis_ims_val_t = ims_st[ tset_val[ vis_val ] ]
@@ -266,22 +274,29 @@ for epoch in range( niter ):
         bis = bi * batch_size
         bie = min( bi * batch_size + batch_size, num_sample_st )
         this_bsize = bie - bis
+        Pb = pset_tr[ bis : bie ]
         ISb = ims_st[ sset_tr[ bis : bie ] ]
         ITb_sr = ims_st[ tset_tr[ bis : bie ] ]
+        ITb_sru = np.zeros( ISb.shape, ISb.dtype )
+        for b in range( this_bsize ):
+            iid = tset_tr[ np_rng.choice( ( pset_tr != Pb[ b ] ).nonzero(  )[ 0 ], 1 ) ]
+            ITb_sru[ b ] = ims_st[ iid ]
         # Flip augmentation.
         for b in range( this_bsize ):
-            if np.random.uniform(  ) > .5:
+            if np_rng.uniform(  ) > .5:
                 ISb[ b ] = ( np.fliplr( ISb[ b ].transpose( 1, 2, 0 ) ) ).transpose( 2, 0, 1 )
-            if np.random.uniform(  ) > .5:
+            if np_rng.uniform(  ) > .5:
                 ITb_sr[ b ] = ( np.fliplr( ITb_sr[ b ].transpose( 1, 2, 0 ) ) ).transpose( 2, 0, 1 )
+            if np_rng.uniform(  ) > .5:
+                ITb_sru[ b ] = ( np.fliplr( ITb_sru[ b ].transpose( 1, 2, 0 ) ) ).transpose( 2, 0, 1 ) 
         # Train converter.
         cost_for_ced_s = _train_ced_s( ISb ) # Update ced * 2
         cost_for_ced_s_cumm += cost_for_ced_s * this_bsize
         # Train discriminator.
-        cost_for_d_s = _train_d_s( ISb, ITb_sr ) # Update d * 2
+        cost_for_d_s = _train_d_s( ISb, ITb_sr, ITb_sru ) # Update d * 2
         cost_for_d_s_cumm += cost_for_d_s * this_bsize
         # Train domain-discriminator.
-        cost_for_dd_s = _train_dd_s( ISb, ITb_sr ) # Update dd * 2
+        cost_for_dd_s = _train_dd_s( ISb, ITb_sri, ITb_sru ) # Update dd * 2
         cost_for_dd_s_cumm += cost_for_dd_s * this_bsize
         # Monitor.
         if np.mod( bi, num_batch / 20 ) == 0:
@@ -310,16 +325,21 @@ for epoch in range( niter ):
         bis = bi * batch_size
         bie = min( bi * batch_size + batch_size, num_sample_st )
         this_bsize = bie - bis
+        Pb = pset_val[ bis : bie ]
         ISb = ims_st[ sset_val[ bis : bie ] ]
         ITb_sr = ims_st[ tset_val[ bis : bie ] ]
+        ITb_sru = np.zeros( ISb.shape, ISb.dtype )
+        for b in range( this_bsize ):
+            iid = tset_val[ np_rng.choice( ( pset_val != Pb[ b ] ).nonzero(  )[ 0 ], 1 ) ]
+            ITb_sru[ b ] = ims_st[ iid ]
         # Val converter.
         cost_for_ced_s = _val_ced_s( ISb )
         cost_for_ced_s_cumm += cost_for_ced_s * this_bsize
         # Val discriminator.
-        cost_for_d_s = _val_d_s( ISb, ITb_sr )
+        cost_for_d_s = _val_d_s( ISb, ITb_sr, ITb_sru )
         cost_for_d_s_cumm += cost_for_d_s * this_bsize
         # Val domain-discriminator.
-        cost_for_dd_s = _val_dd_s( ISb, ITb_sr )
+        cost_for_dd_s = _val_dd_s( ISb, ITb_sr, ITb_sru )
         cost_for_dd_s_cumm += cost_for_dd_s * this_bsize
         # Monitor.
         if np.mod( bi, num_batch / 20 ) == 0:
