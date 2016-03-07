@@ -201,7 +201,7 @@ pset_val = di_st.pids_val
 
 # PREPARE FOR DATAOUT.
 dataout = os.path.join( './dataout/LOOKBOOK_PRODUCTS' )
-desc = 'train_pldt_no_z'.upper(  )
+desc = 'train_pldt'.upper(  )
 model_dir = os.path.join( dataout, desc, 'models'.upper(  ) )
 sample_dir = os.path.join( dataout, desc, 'samples'.upper(  ) )
 if not os.path.exists( model_dir ):
@@ -296,7 +296,7 @@ for epoch in range( niter ):
         cost_for_d_s = _train_d_s( ISb, ITb_sr, ITb_sru ) # Update d * 2
         cost_for_d_s_cumm += cost_for_d_s * this_bsize
         # Train domain-discriminator.
-        cost_for_dd_s = _train_dd_s( ISb, ITb_sri, ITb_sru ) # Update dd * 2
+        cost_for_dd_s = _train_dd_s( ISb, ITb_sr, ITb_sru ) # Update dd * 2
         cost_for_dd_s_cumm += cost_for_dd_s * this_bsize
         # Monitor.
         if np.mod( bi, num_batch / 20 ) == 0:
