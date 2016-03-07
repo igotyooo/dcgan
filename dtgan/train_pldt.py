@@ -200,8 +200,8 @@ tset_val = di_st.d2set_val
 pset_val = di_st.pids_val
 
 # PREPARE FOR DATAOUT.
-dataout = os.path.join( './dataout/LOOKBOOK_PRODUCTS' )
-desc = 'train_pldt'.upper(  )
+dataout = os.path.join( './dataout/', di_st.name )
+desc = ( sys.argv[ 0 ][ 0 : -3 ] ).upper(  )
 model_dir = os.path.join( dataout, desc, 'models'.upper(  ) )
 sample_dir = os.path.join( dataout, desc, 'samples'.upper(  ) )
 if not os.path.exists( model_dir ):
