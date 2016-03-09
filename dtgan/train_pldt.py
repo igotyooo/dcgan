@@ -55,13 +55,15 @@ ce_w4 = filt_ifn( ( nf * 8, nf * 4, 5, 5), 'ce_w4' )
 ce_g4 = gain_ifn( ( nf * 8 ), 'ce_g4' )
 ce_b4 = bias_ifn( ( nf * 8 ), 'ce_b4' )
 ce_w5 = filt_ifn( ( nz, nf * 8, 4, 4 ), 'ce_w5' )
-encoder_params = [ ce_w1, ce_w2, ce_g2, ce_b2, ce_w3, ce_g3, ce_b3, ce_w4, ce_g4, ce_b4, ce_w5 ]
-def encoder( s, w1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5 ):
+ce_g5 = gain_ifn( nz, 'ce_g5' )
+ce_b5 = bias_ifn( nz, 'ce_b5' )
+encoder_params = [ ce_w1, ce_w2, ce_g2, ce_b2, ce_w3, ce_g3, ce_b3, ce_w4, ce_g4, ce_b4, ce_w5, ce_g5, ce_b5 ]
+def encoder( s, w1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b5 ):
     h1 = lrelu( dnn_conv( s, w1, subsample=( 2, 2 ), border_mode = ( 2, 2 ) ) )
     h2 = lrelu( batchnorm( dnn_conv( h1, w2, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2, b = b2 ) )
     h3 = lrelu( batchnorm( dnn_conv( h2, w3, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g3, b = b3 ) )
     h4 = lrelu( batchnorm( dnn_conv( h3, w4, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4, b = b4 ) )
-    z = tanh( dnn_conv( h4, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ) )
+    z = lrelu( batchnorm( dnn_conv( h4, w5, subsample = ( 1, 1 ), border_mode = ( 0, 0 ) ), g = g5, b = b5 ) )
     return T.flatten( z, 2 )
 
 # INITIALIZE AND DEFINE CONVERTER-DECODER.
