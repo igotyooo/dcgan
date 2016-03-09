@@ -24,7 +24,7 @@ def itf( X, npx ):
 # SET PARAMETERS.
 l2 = 1e-5           # l2 weight decay.
 b1 = 0.5            # momentum term of adam.
-nz = 100 	    # # dim of central activation of converter.
+nz = 64 	    # # dim of central activation of converter.
 nc = 3              # # of channels in image.
 batch_size = 128    # # of examples in batch.
 npx = 64            # # of pixels width/height of input images.
