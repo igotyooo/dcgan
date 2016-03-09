@@ -34,6 +34,7 @@ niter_lr0 = 50      # # of iter at starting learning rate.
 niter = 100         # # of total iteration.
 lr_decay = 10       # # of iter to linearly decay learning rate to zero.
 lr = 0.0002         # Initial learning rate for adam.
+dd_wei = .5         # Weight for domain-discrim cost. (1 - wei_dd) is applied to real/fake-discrim.
 
 # INITIALIZE AND DEFINE CONVERTER-ENCODER.
 relu = activations.Rectify(  )
@@ -154,23 +155,24 @@ YDD_sr = domain_discrim( IST_sr, *domain_discrim_params )
 YDD_sf = domain_discrim( IST_sf, *domain_discrim_params )
 YDD_sru = domain_discrim( IST_sru, *domain_discrim_params )
 # For converter.
+wdd = sharedX( wei_dd )
 cost_d_for_ced_sf = bce( YD_sf, T.ones( YD_sf.shape ) ).mean(  )
 cost_dd_for_ced_sf = bce( YDD_sf, T.ones( YDD_sf.shape ) ).mean(  )
-cost_for_ced_s = cost_d_for_ced_sf + cost_dd_for_ced_sf
+cost_for_ced_s = ( 1. - wdd ) * cost_d_for_ced_sf + wdd * cost_dd_for_ced_sf
 ced_s_updater = updates.Adam( lr = lrt, b1 = b1, regularizer = updates.Regularizer( l2 = l2 ) )
 ced_s_updates = ced_s_updater( converter_params, cost_for_ced_s )
 # For discriminator.
 cost_d_for_d_sr = bce( YD_sr, T.ones( YD_sr.shape ) ).mean(  )
 cost_d_for_d_sf = bce( YD_sf, T.zeros( YD_sf.shape ) ).mean(  )
 cost_d_for_d_sru = bce( YD_sru, T.ones( YD_sru.shape ) ).mean(  )
-cost_for_d_s = cost_d_for_d_sr + cost_d_for_d_sf + cost_d_for_d_sru
+cost_for_d_s = cost_d_for_d_sr / 3. + cost_d_for_d_sf / 3. + cost_d_for_d_sru / 3.
 d_s_updater = updates.Adam( lr = lrt, b1 = b1, regularizer = updates.Regularizer( l2 = l2 ) )
 d_s_updates = d_s_updater( discrim_params, cost_for_d_s )
 # For domain-discriminator.
 cost_dd_for_dd_sr = bce( YDD_sr, T.ones( YDD_sr.shape ) ).mean(  )
 cost_dd_for_dd_sf = bce( YDD_sf, T.zeros( YDD_sf.shape ) ).mean(  )
 cost_dd_for_dd_sru = bce( YDD_sru, T.zeros( YDD_sru.shape ) ).mean(  )
-cost_for_dd_s = cost_dd_for_dd_sr + cost_dd_for_dd_sf + cost_dd_for_dd_sru
+cost_for_dd_s = cost_dd_for_dd_sr / 3. + cost_dd_for_dd_sf / 3. + cost_dd_for_dd_sru / 3.
 dd_s_updater = updates.Adam( lr = lrt, b1 = b1, regularizer = updates.Regularizer( l2 = l2 ) )
 dd_s_updates = dd_s_updater( domain_discrim_params, cost_for_dd_s )
 
