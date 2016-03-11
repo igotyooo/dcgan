@@ -15,16 +15,10 @@ class Pldt:
         self.impaths = [  ]
         self.d1set_tr = [  ]
         self.d2set_tr = [  ]
-        self.cls1_tr = [  ]
-        self.cls2_tr = [  ]
         self.pids_tr = [  ]
         self.d1set_val = [  ]
         self.d2set_val = [  ]
-        self.cls1_val = [  ]
-        self.cls2_val = [  ]
         self.pids_val = [  ]
-        self.cls1_names = [  ]
-        self.cls2_names = [  ]
     def set_LOOKBOOK( self ):
         # Set param.
         src_dir = data_dir_LOOKBOOK
@@ -35,17 +29,11 @@ class Pldt:
         iid2impath.sort(  )
         iid2impath = np.array( iid2impath )
         np.random.seed( 0 )
-        iid2cname = [  ]
         iid2clean = [  ]
         iid2pid = [  ]
-        iid2colname = [  ]
         for iid in range( len( iid2impath ) ):
-            iid2cname.append( re.findall( 'CLS_([\w+]+)___PID', iid2impath[ iid ] )[ 0 ] )
-            iid2pid.append( int( re.findall( 'PID_([\d+]+)___COLOR', iid2impath[ iid ] )[ 0 ] ) )
-            iid2colname.append( re.findall( 'COLOR_([\w+]+)___CLEAN', iid2impath[ iid ] )[ 0 ] )
-            iid2clean.append( bool( int( re.findall( 'CLEAN_([\d+]+)___IID', iid2impath[ iid ] )[ 0 ] ) ) )
-        cid2name, iid2cid = np.unique( iid2cname, return_inverse = True )
-        colid2name, iid2colid = np.unique( iid2colname, return_inverse = True )
+            iid2pid.append( int( re.findall( 'PID([\d+]+)', iid2impath[ iid ] )[ 0 ] ) )
+            iid2clean.append( bool( int( re.findall( 'CLEAN([\d+]+)', iid2impath[ iid ] )[ 0 ] ) ) )
         iid2pid = np.array( iid2pid )
         iid2clean = np.array( iid2clean )
         # Pairing domain-1 and domain-2, and spliting train and val.
@@ -63,32 +51,20 @@ class Pldt:
             else:
                 d1set_val = np.hstack( ( d1set_val, natiids ) )
                 d2set_val = np.hstack( ( d2set_val, np.tile( prodiid, natiids.size ) ) )
-        cls1_tr = iid2cid.take( d1set_tr )
-        cls2_tr = iid2colid.take( d1set_tr )
-        cls1_val = iid2cid.take( d1set_val )
-        cls2_val = iid2colid.take( d1set_val )
         self.name = 'LOOKBOOK'
         self.impaths = iid2impath
         self.d1set_tr = d1set_tr
         self.d2set_tr = d2set_tr
-        self.cls1_tr = cls1_tr
-        self.cls2_tr = cls2_tr
         self.pids_tr = iid2pid.take( d1set_tr )
         self.d1set_val = d1set_val
         self.d2set_val = d2set_val
-        self.cls1_val = cls1_val
-        self.cls2_val = cls2_val
         self.pids_val = iid2pid.take( d1set_val )
-        self.cls1_names = cid2name
-        self.cls2_names = colid2name
         print( 'Done.' )
     def shuffle( self ):
         np.random.seed( 0 )
         rp = np.random.permutation( len( self.d1set_tr ) )
         self.d1set_tr = self.d1set_tr.take( rp )
         self.d2set_tr = self.d2set_tr.take( rp )
-        self.cls1_tr = self.cls1_tr.take( rp )
-        self.cls2_tr = self.cls2_tr.take( rp )
         self.pids_tr = self.pids_tr.take( rp )
     def load( self, im_side, keep_aspect ):
         return load_ims( self.impaths, self.name, im_side, keep_aspect )
