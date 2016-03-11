@@ -155,7 +155,7 @@ YDD_sr = domain_discrim( IST_sr, *domain_discrim_params )
 YDD_sf = domain_discrim( IST_sf, *domain_discrim_params )
 YDD_sru = domain_discrim( IST_sru, *domain_discrim_params )
 # For converter.
-wdd = sharedX( wei_dd )
+wdd = sharedX( dd_wei )
 cost_d_for_ced_sf = bce( YD_sf, T.ones( YD_sf.shape ) ).mean(  )
 cost_dd_for_ced_sf = bce( YDD_sf, T.ones( YDD_sf.shape ) ).mean(  )
 cost_for_ced_s = ( 1. - wdd ) * cost_d_for_ced_sf + wdd * cost_dd_for_ced_sf
