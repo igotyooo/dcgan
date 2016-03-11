@@ -8,7 +8,6 @@ from theano.sandbox.cuda.dnn import dnn_conv
 sys.path.append( '..' )
 from lib import activations, updates, inits
 from lib.vis import color_grid_vis
-from lib.rng import py_rng, np_rng
 from lib.ops import batchnorm, conv_cond_concat, deconv, dropout, l2normalize
 from lib.theano_utils import floatX, sharedX
 from Datain import Pldt, Gan
@@ -214,6 +213,7 @@ if not os.path.exists( sample_dir ):
     os.makedirs( sample_dir )
 
 # PLOT SOURCE/TARGET SAMPLE IMAGES.
+np_rng = np.random.RandomState( 1 )
 vis_tr = np_rng.permutation( len( sset_tr ) )
 vis_tr = vis_tr[ 0 : nvis ** 2 ]
 vis_ims_tr_s = ims_st[ sset_tr[ vis_tr ] ]
@@ -244,6 +244,7 @@ t = time(  )
 for epoch in range( niter ):
     # Decay learning rate if needed.
     num_epoch += 1
+    np_rng = np.random.RandomState( num_epoch )
     if num_epoch > niter_lr0:
         print( 'Decaying learning rate.' )
         lrt.set_value( floatX( lrt.get_value(  ) - lr / lr_decay ) )
