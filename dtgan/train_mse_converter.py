@@ -11,7 +11,7 @@ from lib import activations, updates, inits
 from lib.vis import color_grid_vis
 from lib.ops import batchnorm, conv_cond_concat, deconv, dropout, l2normalize
 from lib.theano_utils import floatX, sharedX
-from Datain import Datain
+from Datain import Pldt
 def transform( X, npx ):
     assert X[ 0 ].shape == ( npx, npx, 3 ) or X[ 0 ].shape == ( 3, npx, npx )
     if X[ 0 ].shape == ( npx, npx, 3 ):
@@ -29,10 +29,9 @@ b1 = 0.5          # momentum term of adam.
 nz = 100 	  # # dim of central activation of converter.
 nc = 3            # # of channels in image.
 batch_size = 128  # # of examples in batch.
-npx_s = 128       # # of pixels width/height of source images.
-npx_t = 64        # # of pixels width/height of target images.
+npx = 64          # # of pixels width/height of target images.
 nf = 128          # Primary # of filters.
-niter = 25        # # of iter at starting learning rate.
+niter = 50        # # of iter at starting learning rate.
 niter_decay = 0   # # of iter to linearly decay learning rate to zero.
 lr = 0.0002       # Initial learning rate for adam.
 shuffle = True    # Suffling training sample sequance.
@@ -46,10 +45,7 @@ bce = T.nnet.binary_crossentropy
 filt_ifn = inits.Normal( scale = 0.02 )
 gain_ifn = inits.Normal( loc = 1., scale = 0.02 )
 bias_ifn = inits.Constant( c = 0. )
-cw0 = filt_ifn( ( nf / 2, nc, 5, 5 ), 'cw0' )
-cw1 = filt_ifn( ( nf, nf / 2, 5, 5 ), 'cw1' )
-cg1 = gain_ifn( nf, 'cg1' )
-cb1 = bias_ifn( nf, 'cb1' )
+cw1 = filt_ifn( ( nf, nc, 5, 5 ), 'cw1' )
 cw2 = filt_ifn( ( nf * 2, nf, 5, 5 ), 'cw2' )
 cg2 = gain_ifn( ( nf * 2 ), 'cg2' )
 cb2 = bias_ifn( ( nf * 2 ), 'cb2' )
@@ -75,12 +71,11 @@ cw2d = filt_ifn( ( nf * 2, nf, 5, 5 ), 'cw2d' )
 cg2d = gain_ifn( ( nf ), 'cg2d' )
 cb2d = bias_ifn( ( nf ), 'cb2d' )
 cw1d = filt_ifn( ( nf, nc, 5, 5 ), 'cw1d' )
-converter_params = [ cw0, cw1, cg1, cb1, cw2, cg2, cb2, cw3, cg3, cb3, cw4, cg4, cb4, cw5, cg5, cb5,
+converter_params = [ cw1, cw2, cg2, cb2, cw3, cg3, cb3, cw4, cg4, cb4, cw5, cg5, cb5,
         cw5d, cg5d, cb5d, cw4d, cg4d, cb4d, cw3d, cg3d, cb3d, cw2d, cg2d, cb2d, cw1d ]
-def converter( IS, w0, w1, g1, b1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b5,
+def converter( IS, w1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b5,
         w5d, g5d, b5d, w4d, g4d, b4d, w3d, g3d, b3d, w2d, g2d, b2d, w1d ):
-    h0 = lrelu( dnn_conv( IS, w0, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ) )
-    h1 = lrelu( batchnorm( dnn_conv( h0, w1, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g1, b = b1 ) )
+    h1 = lrelu( dnn_conv( IS, w1, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ) )
     h2 = lrelu( batchnorm( dnn_conv( h1, w2, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g2, b = b2 ) )
     h3 = lrelu( batchnorm( dnn_conv( h2, w3, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g3, b = b3 ) )
     h4 = lrelu( batchnorm( dnn_conv( h3, w4, subsample = ( 2, 2 ), border_mode = ( 2, 2 ) ), g = g4, b = b4 ) )
@@ -98,7 +93,7 @@ def converter( IS, w0, w1, g1, b1, w2, g2, b2, w3, g3, b3, w4, g4, b4, w5, g5, b
 IS = T.tensor4(  )
 IT = T.tensor4(  )
 IT_hat = converter( IS, *converter_params )
-cost = T.mean( ( IT - IT_hat ) ** 2 )
+cost = T.mean( ( IT - IT_hat ) ** 2. )
 lrt = sharedX( lr )
 c_updater = updates.Adam( lr = lrt, b1 = b1, regularizer=updates.Regularizer( l2 = l2 ) )
 c_updates = c_updater( converter_params, cost )
@@ -111,10 +106,9 @@ _convert = theano.function( [ IS ], IT_hat )
 print '%.2f seconds to compile theano functions.'%( time(  ) - t )
 
 # PREPARE FOR DATAIN.
-di = Datain(  )
-di.set_LookBook(  )
-ims_ssize = di.load( npx_s, True )
-ims_tsize = di.load( npx_t, True )
+di = Pldt(  )
+di.set_LOOKBOOK(  )
+ims = di.load( npx, True )
 if shuffle:
     di.shuffle(  )
 sset_tr = di.d1set_tr
@@ -143,25 +137,25 @@ log_fields = [
     'cost',]
 
 # PLOT SOURCE/TARGET SAMPLE IMAGES.
-np.random.seed( 0 )
-vis_tr = np.random.permutation( len( sset_tr ) )
+np_rng = np.random.RandomState( 1 )
+vis_tr = np_rng.permutation( len( sset_tr ) )
 vis_tr = vis_tr[ 0 : nvis ** 2 ]
-vis_ims_tr_s = ims_tsize.take( sset_tr.take( vis_tr ), axis = 0 )
-vis_ims_tr_t = ims_tsize.take( tset_tr.take( vis_tr ), axis = 0 )
+vis_ims_tr_s = ims[ sset_tr[ vis_tr ] ]
+vis_ims_tr_t = ims[ tset_tr[ vis_tr ] ]
 color_grid_vis( vis_ims_tr_s, ( nvis, nvis ),
             os.path.join( sample_dir, 'TR000S.png' ) )
 color_grid_vis( vis_ims_tr_t, ( nvis, nvis ),
             os.path.join( sample_dir, 'TR000T.png' ) )
-vis_ims_tr_s = transform( ims_ssize.take( sset_tr.take( vis_tr ), axis = 0 ), npx_s )
-vis_val = np.random.permutation( len( sset_val ) )
+vis_ims_tr_s = transform( ims[ sset_tr[ vis_tr ] ], npx )
+vis_val = np_rng.permutation( len( sset_val ) )
 vis_val = vis_val[ 0 : nvis ** 2 ]
-vis_ims_val_s = ims_tsize.take( sset_val.take( vis_val ), axis = 0 )
-vis_ims_val_t = ims_tsize.take( tset_val.take( vis_val ), axis = 0 )
+vis_ims_val_s = ims[ sset_val[ vis_val ] ]
+vis_ims_val_t = ims[ tset_val[ vis_val ] ]
 color_grid_vis( vis_ims_val_s, ( nvis, nvis ),
             os.path.join( sample_dir, 'VAL000S.png' ) )
 color_grid_vis( vis_ims_val_t, ( nvis, nvis ),
             os.path.join( sample_dir, 'VAL000T.png' ) )
-vis_ims_val_s = transform( ims_ssize.take( sset_val.take( vis_val ), axis = 0 ), npx_s )
+vis_ims_val_s = transform( ims[ sset_val[ vis_val ] ], npx )
 
 # DO THE JOB.
 print desc.upper(  )
@@ -185,8 +179,8 @@ for epoch in range( niter ):
     for idx in range( num_batches ):
         idxs = idx * batch_size
         idxe = min( idx * batch_size + batch_size, sset_tr.shape[ 0 ] )
-        ISb = transform( ims_ssize.take( sset_tr[ idxs : idxe ], axis = 0 ), npx_s )
-        ITb = transform( ims_tsize.take( tset_tr[ idxs : idxe ], axis = 0 ), npx_t )
+        ISb = transform( ims[ sset_tr[ idxs : idxe ] ], npx )
+        ITb = transform( ims[ tset_tr[ idxs : idxe ] ], npx )
         cost = _train_c( ISb, ITb )
         num_update += 1
         num_example += len( ISb )
@@ -201,10 +195,10 @@ for epoch in range( niter ):
     f_log.flush(  )
     # Sample visualization.
     samples = np.asarray( _convert( vis_ims_tr_s ) )
-    color_grid_vis( inverse_transform( samples, npx_t ), ( nvis, nvis ),
+    color_grid_vis( inverse_transform( samples, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'TR%03dT.png' % num_epoch ) )
     samples = np.asarray( _convert( vis_ims_val_s ) )
-    color_grid_vis( inverse_transform( samples, npx_t ), ( nvis, nvis ),
+    color_grid_vis( inverse_transform( samples, npx ), ( nvis, nvis ),
             os.path.join( sample_dir, 'VAL%03dT.png' % num_epoch ) )
     # Save network.
     print( 'Epoch %02d: Save.' % num_epoch )
