@@ -45,6 +45,8 @@ class Pldt:
         for pid in pids:
             prodiid = np.logical_and( iid2pid == pid, iid2clean == True ).nonzero(  )[ 0 ]
             natiids = np.logical_and( iid2pid == pid, iid2clean == False ).nonzero(  )[ 0 ]
+            assert( len( prodiid ) )
+            assert( len( natiids ) )
             if np.random.rand( 1 ) > val_rate:
                 d1set_tr = np.hstack( ( d1set_tr, natiids ) )
                 d2set_tr = np.hstack( ( d2set_tr, np.tile( prodiid, natiids.size ) ) )
@@ -141,6 +143,8 @@ def load_ims( impaths, name, im_side, keep_aspect ):
                     mtop = 255 * np.ones( ( mtop, im_side, 3 ), np.uint8 )
                     mbttm = 255 * np.ones( ( mbttm, im_side, 3 ), np.uint8 )
                     im_ = np.concatenate( ( mtop, im_, mbttm ), axis = 0 )
+                elif nr == nc:
+                    im_ = scipy.misc.imresize( im, [ im_side, im_side, 3 ] )
             else:
                 im_ = scipy.misc.imresize( im, [ im_side, im_side, 3 ] )
             ims[ i, :, :, : ] = im_
