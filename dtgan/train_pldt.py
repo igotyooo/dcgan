@@ -244,7 +244,7 @@ t = time(  )
 for epoch in range( niter ):
     # Decay learning rate if needed.
     num_epoch += 1
-    np_rng = np.random.RandomState( num_epoch )
+    np_rng = np.random.RandomState( num_epoch ) # Neccessary for same result for the case of loaded network.
     if num_epoch > niter_lr0:
         print( 'Decaying learning rate.' )
         lrt.set_value( floatX( lrt.get_value(  ) - lr / lr_decay ) )
