@@ -118,7 +118,7 @@ tset_val = di.d2set_val
 
 # PREPARE FOR DATAOUT.
 dataout = os.path.join( './dataout/', di.name.upper(  ) )
-desc = 'train_mse_converter'.upper(  )
+desc = ( sys.argv[ 0 ][ 0 : -3 ] ).upper(  )
 model_dir = os.path.join( dataout, desc, 'models'.upper(  ) )
 sample_dir = os.path.join( dataout, desc, 'samples'.upper(  ) )
 log_dir = os.path.join( dataout, desc )
